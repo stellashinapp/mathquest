@@ -87,10 +87,19 @@
     font-weight: 500;
   }
 
-  /* 홈 탑바 — 미니멀 (코인/뮤트만 우측에) */
-  .topbar-home { padding: 14px 20px 8px; justify-content: flex-end; gap: 10px; }
-  .topbar-home .topbar-spacer { flex: 1; }
-  .topbar-home .mute-btn { position: static; }
+  /* 홈 탑바 — 인사 + 우측 코인/뮤트 */
+  .topbar-home { padding: 18px 20px 12px; }
+  .home-hello { display: flex; flex-direction: column; }
+  .hello-greeting {
+    font-size: 17px; font-weight: 800;
+    color: var(--text); letter-spacing: -0.5px;
+    line-height: 1.2;
+  }
+  .hello-sub {
+    font-size: 12px; font-weight: 600;
+    color: var(--text-muted); letter-spacing: -0.2px;
+    margin-top: 3px;
+  }
   .topbar .back {
     background: var(--surface-soft);
     border: 1px solid var(--border);
@@ -2446,8 +2455,19 @@ function screenHome() {
   const screen = el('div', { class: 'screen' });
   updateStreak(); // 홈 방문 시 출석 체크
 
+  // 시간대별 인사 (0~5시는 새벽 대신 응원 멘트)
+  const hr = new Date().getHours();
+  const hello =
+    hr < 5  ? '오늘도 화이팅!' :
+    hr < 12 ? '좋은 아침이에요' :
+    hr < 18 ? '좋은 오후예요' :
+    hr < 22 ? '좋은 저녁이에요' :
+              '오늘도 한 걸음 더!';
   const topbar = el('div', { class: 'topbar topbar-home' },
-    el('div', { class: 'topbar-spacer' }),
+    el('div', { class: 'home-hello' },
+      el('div', { class: 'hello-greeting' }, hello),
+      el('div', { class: 'hello-sub' }, '오늘도 한 단계!')
+    ),
     el('button', {
       class: 'mute-btn',
       title: SAVE.muted ? '소리 켜기' : '소리 끄기',
@@ -2932,7 +2952,7 @@ function icon(name, opts = {}) {
   return `<svg class="ico" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round">${inner}</svg>`;
 }
 
-// === Math Quest 로고 (M² 컨셉) ===
+// === Math Quest 로고 (M² 컨셉, 굵직한 M) ===
 function logo(size = 36) {
   const id = 'lg' + Math.floor(Math.random() * 100000);
   return `<svg class="logo-mark" width="${size}" height="${size}" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
@@ -2943,8 +2963,10 @@ function logo(size = 36) {
       </linearGradient>
     </defs>
     <rect width="64" height="64" rx="14" fill="url(#${id})"/>
-    <path d="M14 48V18l9 14 9-14v30" stroke="white" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-    <path d="M48 12v10M43 17h10" stroke="#fbbf24" stroke-width="3.5" stroke-linecap="round"/>
+    <!-- 두꺼운 M (filled 형태, 학년 카드 숫자처럼 묵직) -->
+    <path d="M8 54V12h7l17 22 17-22h7v42h-9V28L34 44h-4L17 28v26z" fill="white"/>
+    <!-- 우측 상단 + 액센트 -->
+    <path d="M54 8v8M50 12h8" stroke="#fbbf24" stroke-width="3" stroke-linecap="round"/>
   </svg>`;
 }
 
