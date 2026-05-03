@@ -514,20 +514,53 @@
     letter-spacing: -1px;
   }
   .answer-box.correct {
-    border-color: var(--success); background: #d1fae5; color: var(--success);
+    border-color: var(--success);
+    background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+    color: var(--success);
+    box-shadow:
+      0 0 0 4px rgba(16, 185, 129, 0.18),
+      0 8px 28px rgba(16, 185, 129, 0.35);
+    animation: correctFlash .6s cubic-bezier(0.2, 1.3, 0.6, 1);
+  }
+  @keyframes correctFlash {
+    0%   { transform: scale(1); }
+    35%  { transform: scale(1.12); }
+    100% { transform: scale(1); }
   }
   .answer-box.wrong {
-    border-color: var(--danger); background: var(--danger-soft); color: var(--danger);
+    border-color: var(--danger);
+    background: linear-gradient(135deg, var(--danger-soft) 0%, #fecaca 100%);
+    color: var(--danger);
+    box-shadow:
+      0 0 0 4px rgba(239, 68, 68, 0.15),
+      0 8px 28px rgba(239, 68, 68, 0.3);
   }
   .feedback {
     position: absolute; bottom: 14px;
-    font-size: 13px; font-weight: 700;
-    opacity: 0; transition: opacity .2s;
-    letter-spacing: -0.1px;
+    font-size: 17px; font-weight: 900;
+    opacity: 0;
+    letter-spacing: -0.3px;
+    padding: 7px 18px; border-radius: 999px;
+    transform: translateY(8px) scale(0.85);
+    transition: opacity .25s, transform .35s cubic-bezier(0.2, 1.3, 0.6, 1);
   }
-  .feedback.show { opacity: 1; }
-  .feedback.correct { color: var(--success); }
-  .feedback.wrong { color: var(--danger); }
+  .feedback.show { opacity: 1; transform: translateY(0) scale(1); }
+  .feedback.correct {
+    color: #fff;
+    background: linear-gradient(90deg, var(--success) 0%, #34d399 100%);
+    box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4);
+    animation: feedbackBounce .55s cubic-bezier(0.2, 1.3, 0.6, 1);
+  }
+  .feedback.wrong {
+    color: #fff;
+    background: linear-gradient(90deg, var(--danger) 0%, #f87171 100%);
+    box-shadow: 0 4px 16px rgba(239, 68, 68, 0.35);
+  }
+  @keyframes feedbackBounce {
+    0%   { transform: translateY(20px) scale(0.5); }
+    50%  { transform: translateY(-4px) scale(1.1); }
+    100% { transform: translateY(0) scale(1); }
+  }
 
   /* Keypad */
   .keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
@@ -825,6 +858,24 @@
   @keyframes ansPulse {
     0%, 100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); }
     50% { box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1); }
+  }
+
+  /* === 정답 스파클 (답 박스 주변에서 사방으로 퍼짐) === */
+  .sparkle {
+    position: absolute;
+    font-size: 22px;
+    pointer-events: none;
+    z-index: 30;
+    transform: translate(-50%, -50%) scale(0);
+    animation: sparkleOut 0.85s cubic-bezier(0.2, 1, 0.4, 1) forwards;
+  }
+  @keyframes sparkleOut {
+    0%   { opacity: 0; transform: translate(-50%, -50%) scale(0) rotate(0deg); }
+    25%  { opacity: 1; transform: translate(-50%, -50%) scale(1.2) rotate(60deg); }
+    100% {
+      opacity: 0;
+      transform: translate(calc(-50% + var(--tx)), calc(-50% + var(--ty))) scale(0.4) rotate(360deg);
+    }
   }
 
 </style>
@@ -2628,6 +2679,33 @@ function pressKey(k, state) {
   box.classList.remove('correct', 'wrong');
 }
 
+// 정답 시 답 박스 주변에 작은 스파클 띄우기
+function spawnSparkles(targetEl) {
+  if (!targetEl) return;
+  const rect = targetEl.getBoundingClientRect();
+  const appRect = document.getElementById('app').getBoundingClientRect();
+  const cx = rect.left + rect.width / 2 - appRect.left;
+  const cy = rect.top + rect.height / 2 - appRect.top;
+  const sparkles = ['✨','⭐','💫','🌟'];
+  const count = 8;
+  for (let i = 0; i < count; i++) {
+    const s = document.createElement('div');
+    s.className = 'sparkle';
+    s.textContent = sparkles[i % sparkles.length];
+    const angle = (i / count) * Math.PI * 2 + Math.random() * 0.4;
+    const distance = 60 + Math.random() * 50;
+    const tx = Math.cos(angle) * distance;
+    const ty = Math.sin(angle) * distance;
+    s.style.left = cx + 'px';
+    s.style.top = cy + 'px';
+    s.style.setProperty('--tx', tx + 'px');
+    s.style.setProperty('--ty', ty + 'px');
+    s.style.animationDelay = (i * 0.03) + 's';
+    document.getElementById('app').appendChild(s);
+    setTimeout(() => s.remove(), 900);
+  }
+}
+
 function submitAnswer(state, isTimeout = false) {
   if (!isTimeout && (currentAnswer === '' || currentAnswer === '-')) return;
   // 타이머 정리
@@ -2645,14 +2723,16 @@ function submitAnswer(state, isTimeout = false) {
 
   if (isCorrect) {
     box.classList.add('correct');
-    // 스피드 보너스 계산
+    // 스피드 보너스
     let speedMul = 1.0;
     let speedLabel = '';
-    if (elapsedSec < 3) { speedMul = 1.5; speedLabel = ' ⚡ 1.5x'; SAVE.stats.fastAnswers++; }
-    else if (elapsedSec < 6) { speedMul = 1.2; speedLabel = ' 🏃 1.2x'; }
-    feedback.textContent = '✅ 정답!' + speedLabel;
+    if (elapsedSec < 3) { speedMul = 1.5; speedLabel = '  ⚡ 1.5x'; SAVE.stats.fastAnswers++; }
+    else if (elapsedSec < 6) { speedMul = 1.2; speedLabel = '  🏃 1.2x'; }
+    feedback.textContent = '🎉 정답!' + speedLabel;
     feedback.className = 'feedback correct show';
     area.classList.add('pop');
+    // 정답 스파클 효과
+    spawnSparkles(box);
     state.results[state.idx] = true;
     state.combo++;
     // 통계
