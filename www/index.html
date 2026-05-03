@@ -1,0 +1,2503 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<meta name="theme-color" content="#5b4ee7" />
+<title>수학 퀘스트 - 초등 수학 게임</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    margin: 0; padding: 0; height: 100%;
+    font-family: 'Pretendard', 'Apple SD Gothic Neo', 'Inter', 'Malgun Gothic', system-ui, sans-serif;
+    background: #f2f2f5;
+    color: #1a1a1f;
+    user-select: none;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+  #app {
+    max-width: 480px; margin: 0 auto; height: 100dvh; height: 100vh;
+    display: flex; flex-direction: column; position: relative;
+    background: #ffffff;
+    box-shadow: 0 0 30px rgba(0,0,0,0.05);
+    overflow: hidden;
+  }
+  .screen { flex: 1; display: flex; flex-direction: column; overflow: hidden; animation: fadeIn .2s ease; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+  /* Top bar */
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 20px 14px;
+    background: #ffffff;
+    border-bottom: 1px solid #eceef2;
+    color: #1a1a1f;
+    z-index: 5;
+  }
+  .topbar .title { font-weight: 800; font-size: 17px; letter-spacing: -0.4px; }
+  .topbar .sub { font-size: 12px; color: #8a8a95; margin-top: 1px; font-weight: 500; letter-spacing: -0.1px; }
+  .topbar .back {
+    background: #f4f4f7; border: 1px solid #eceef2; color: #1a1a1f;
+    width: 36px; height: 36px; border-radius: 10px; font-size: 18px; font-weight: 700;
+    cursor: pointer;
+  }
+  .topbar .coins {
+    background: #1a1a1f; padding: 6px 12px; border-radius: 20px;
+    font-size: 12px; font-weight: 700; color: #ffffff;
+    display: flex; align-items: center; gap: 4px; letter-spacing: 0.2px;
+  }
+
+  /* Home */
+  .home { padding: 26px 20px 20px; overflow-y: auto; flex: 1; }
+  .home-title {
+    text-align: left; font-size: 26px; font-weight: 900;
+    color: #1a1a1f;
+    margin: 0 0 4px; letter-spacing: -0.9px;
+  }
+  .home-sub { text-align: left; color: #8a8a95; font-size: 13px; margin-bottom: 26px; font-weight: 500; letter-spacing: -0.1px; }
+
+  .grade-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .grade-card {
+    aspect-ratio: 1 / 1.15; border-radius: 14px;
+    display: flex; flex-direction: column; justify-content: space-between;
+    padding: 14px 16px 16px;
+    background: #ffffff;
+    border: 1px solid #eceef2;
+    color: #1a1a1f; cursor: pointer;
+    transition: transform .15s, border-color .15s, box-shadow .15s;
+    position: relative; overflow: hidden;
+  }
+  .grade-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: var(--grade-accent, #3b82f6);
+  }
+  .grade-card:active { transform: scale(0.97); border-color: var(--grade-accent, #3b82f6); box-shadow: 0 6px 16px rgba(0,0,0,0.06); }
+  .grade-card .stars {
+    font-size: 10.5px; color: #8a8a95; font-weight: 700;
+    letter-spacing: 0.4px;
+  }
+  .grade-card .emoji {
+    font-size: 56px; font-weight: 900;
+    color: var(--grade-accent, #3b82f6);
+    line-height: 1; letter-spacing: -3px;
+    font-family: 'Inter', 'Pretendard', system-ui, sans-serif;
+    font-feature-settings: 'tnum';
+  }
+  .grade-card .g-name {
+    font-size: 16px; font-weight: 800; letter-spacing: -0.4px;
+  }
+  .grade-card .g-desc {
+    font-size: 11px; font-weight: 500; color: #8a8a95;
+    margin-top: 2px; letter-spacing: -0.1px; line-height: 1.4;
+  }
+
+  /* Unit list */
+  .units { padding: 18px 20px 24px; overflow-y: auto; flex: 1; }
+  .unit-card {
+    background: #ffffff; border: 1px solid #eceef2; border-radius: 12px;
+    padding: 14px 16px 14px 18px; margin-bottom: 8px;
+    display: flex; align-items: center; gap: 14px;
+    cursor: pointer; transition: transform .12s, border-color .12s;
+    position: relative; overflow: hidden;
+  }
+  .unit-card::before {
+    content: ''; position: absolute; left: 0; top: 8px; bottom: 8px; width: 3px;
+    border-radius: 0 2px 2px 0;
+    background: var(--unit-accent, #3b82f6);
+  }
+  .unit-card:active { transform: scale(0.99); border-color: var(--unit-accent, #3b82f6); }
+  .unit-icon {
+    width: 38px; height: 38px; border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; flex-shrink: 0;
+    background: var(--unit-icon-bg, #f4f4f7);
+  }
+  .unit-body { flex: 1; min-width: 0; }
+  .unit-name { font-weight: 700; font-size: 14.5px; margin-bottom: 6px; color: #1a1a1f; letter-spacing: -0.3px; }
+  .unit-progress-bar { height: 3px; background: #eceef2; border-radius: 2px; overflow: hidden; }
+  .unit-progress-fill { height: 100%; background: var(--unit-accent, #3b82f6); border-radius: 2px; transition: width .3s; }
+  .unit-meta { font-size: 11px; color: #8a8a95; margin-top: 6px; display: flex; justify-content: space-between; font-weight: 600; letter-spacing: -0.1px; }
+  .unit-stars { color: #f5a623; letter-spacing: 1px; font-size: 13px; }
+
+  /* Play screen */
+  .play { flex: 1; display: flex; flex-direction: column; padding: 14px 18px; overflow: hidden; }
+  .hud { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .hearts { font-size: 17px; letter-spacing: 2px; }
+  .hearts .lost { opacity: 0.2; filter: grayscale(1); }
+  .combo-badge {
+    background: #1a1a1f;
+    color: #fff; font-weight: 800; font-size: 10.5px;
+    padding: 5px 10px; border-radius: 6px;
+    letter-spacing: 0.8px;
+    opacity: 0; transform: scale(0.85);
+    transition: opacity .2s, transform .2s;
+  }
+  .combo-badge.show { opacity: 1; transform: scale(1); }
+  .progress-dots { display: flex; gap: 6px; justify-content: center; margin-bottom: 14px; }
+  .progress-dots .dot {
+    width: 32px; height: 3px; border-radius: 2px; background: #eceef2;
+    transition: background .25s;
+  }
+  .progress-dots .dot.done { background: #1a1a1f; }
+  .progress-dots .dot.wrong { background: #e53e3e; }
+
+  .problem-area {
+    flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    background: #f8f9fb; border: 1px solid #eceef2;
+    border-radius: 12px; padding: 30px 16px;
+    margin-bottom: 10px;
+    position: relative; overflow: hidden;
+  }
+  .problem-area.shake { animation: shake .4s; }
+  @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-8px)} 50%{transform:translateX(8px)} 75%{transform:translateX(-4px)} }
+  .problem-area.pop { animation: pop .35s; }
+  @keyframes pop { 0%{transform:scale(1)} 40%{transform:scale(1.02)} 100%{transform:scale(1)} }
+
+  .q-stage {
+    font-size: 10.5px; color: #8a8a95; margin-bottom: 10px; font-weight: 700;
+    letter-spacing: 1.2px;
+  }
+  .q-text {
+    font-size: 30px; font-weight: 800; text-align: center;
+    line-height: 1.3; color: #1a1a1f; margin-bottom: 20px;
+    padding: 0 10px; letter-spacing: -0.6px;
+  }
+  .q-text.small { font-size: 20px; letter-spacing: -0.3px; }
+  .answer-box {
+    min-width: 120px; min-height: 54px;
+    padding: 10px 24px;
+    background: #ffffff; border: 2px solid #1a1a1f; border-radius: 10px;
+    font-size: 28px; font-weight: 800; color: #1a1a1f;
+    display: flex; align-items: center; justify-content: center;
+    transition: border-color .15s, background .15s;
+    letter-spacing: -0.2px;
+  }
+  .answer-box.correct { border-color: #10b981; background: #f0fdf4; color: #059669; }
+  .answer-box.wrong { border-color: #e53e3e; background: #fef2f2; color: #dc2626; }
+  .feedback {
+    position: absolute; bottom: 14px;
+    font-size: 11.5px; font-weight: 700; opacity: 0;
+    transition: opacity .2s; letter-spacing: 1px;
+  }
+  .feedback.show { opacity: 1; }
+  .feedback.correct { color: #059669; }
+  .feedback.wrong { color: #dc2626; }
+
+  /* Keypad */
+  .keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; }
+  .key {
+    height: 50px; border: 1px solid #eceef2; border-radius: 10px;
+    font-size: 20px; font-weight: 700; cursor: pointer;
+    background: #ffffff; color: #1a1a1f;
+    transition: transform .08s, background .1s, border-color .1s;
+    letter-spacing: -0.2px;
+  }
+  .key:active { transform: translateY(1px); background: #f4f4f7; }
+  .key.action { background: #1a1a1f; color: #fff; border-color: #1a1a1f; font-size: 14px; font-weight: 800; letter-spacing: 0.5px; }
+  .key.action:active { background: #333; }
+  .key.secondary { background: #f8f9fb; font-size: 13px; font-weight: 600; color: #5c5c66; }
+  .key.secondary:active { background: #eceef2; }
+
+  /* Result */
+  .result { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px 24px; text-align: center; }
+  .result .big-emoji { font-size: 64px; margin-bottom: 12px; animation: bounce .45s; }
+  @keyframes bounce { 0%{transform:scale(0.3);opacity:0} 60%{transform:scale(1.1)} 100%{transform:scale(1);opacity:1} }
+  .result h2 { font-size: 26px; margin: 4px 0 6px; color: #1a1a1f; font-weight: 800; letter-spacing: -0.6px; }
+  .result .stage-cleared { color: #8a8a95; font-size: 13px; margin-bottom: 18px; font-weight: 500; letter-spacing: -0.1px; }
+  .result .stars-big { font-size: 44px; letter-spacing: 4px; margin: 10px 0 18px; }
+  .result .star { color: #f5a623; }
+  .result .star.empty { color: #eceef2; }
+  .result .reward {
+    background: #fff8e6; border: 1px solid #fde68a;
+    padding: 12px 20px; border-radius: 10px;
+    font-weight: 700; font-size: 13px; margin-bottom: 20px;
+    color: #a16207; letter-spacing: -0.1px;
+  }
+  .btn {
+    width: 100%; height: 52px; border: 0; border-radius: 12px;
+    font-size: 15px; font-weight: 800; cursor: pointer;
+    margin-bottom: 10px;
+    transition: transform .1s, background .15s;
+    letter-spacing: -0.3px;
+  }
+  .btn:active { transform: scale(0.98); }
+  .btn.primary { background: #1a1a1f; color: #fff; }
+  .btn.primary:active { background: #333; }
+  .btn.ghost { background: #f4f4f7; color: #5c5c66; border: 1px solid #eceef2; }
+
+  .confetti { position: absolute; width: 8px; height: 14px; top: -20px; animation: fall 1.2s linear forwards; border-radius: 2px; }
+  @keyframes fall { to { transform: translateY(120vh) rotate(540deg); } }
+
+  /* Rank panel on home */
+  .rank-panel {
+    background: linear-gradient(135deg, #1a1a1f 0%, #2d2d38 100%);
+    color: #fff; border-radius: 14px; padding: 16px 18px;
+    margin-bottom: 20px; position: relative; overflow: hidden;
+  }
+  .rank-panel::after {
+    content: ''; position: absolute; right: -40px; top: -40px;
+    width: 160px; height: 160px; border-radius: 50%;
+    background: var(--rank-color, #3b82f6);
+    opacity: 0.15;
+  }
+  .rank-row { display: flex; align-items: center; gap: 12px; position: relative; }
+  .rank-icon-big { font-size: 36px; line-height: 1; }
+  .rank-text { flex: 1; min-width: 0; }
+  .rank-label { font-size: 10.5px; color: #9a9aa8; font-weight: 700; letter-spacing: 1.5px; margin-bottom: 2px; }
+  .rank-name { font-size: 18px; font-weight: 800; letter-spacing: -0.4px; }
+  .rank-bar { height: 5px; background: rgba(255,255,255,0.12); border-radius: 3px; margin-top: 12px; overflow: hidden; }
+  .rank-bar-fill { height: 100%; background: var(--rank-color, #3b82f6); border-radius: 3px; transition: width .4s; box-shadow: 0 0 12px var(--rank-color, #3b82f6); }
+  .rank-progress-text { font-size: 11px; color: #9a9aa8; margin-top: 6px; font-weight: 600; display: flex; justify-content: space-between; }
+  .rank-streak { display: inline-flex; align-items: center; gap: 4px; background: rgba(255,255,255,0.08); padding: 4px 10px; border-radius: 10px; font-size: 11px; font-weight: 700; margin-top: 4px; }
+
+  /* Action row under rank panel */
+  .home-actions { display: flex; gap: 8px; margin-bottom: 18px; }
+  .action-pill {
+    flex: 1; background: #f4f4f7; border: 1px solid #eceef2;
+    border-radius: 10px; padding: 10px 12px; cursor: pointer;
+    display: flex; align-items: center; justify-content: space-between;
+    transition: transform .12s, background .12s;
+  }
+  .action-pill:active { transform: scale(0.98); background: #eceef2; }
+  .action-pill .ap-label { font-size: 13px; font-weight: 700; color: #1a1a1f; letter-spacing: -0.2px; }
+  .action-pill .ap-val { font-size: 12px; font-weight: 700; color: #8a8a95; }
+
+  /* Badge gallery */
+  .badges-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 18px 20px 24px; overflow-y: auto; flex: 1; }
+  .badge-card {
+    aspect-ratio: 1 / 1.2;
+    background: #ffffff; border: 1px solid #eceef2; border-radius: 12px;
+    padding: 10px 8px; text-align: center;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+    position: relative;
+  }
+  .badge-card.unlocked { border-color: #1a1a1f; }
+  .badge-card.locked { opacity: 0.4; }
+  .badge-card .b-icon { font-size: 32px; line-height: 1; }
+  .badge-card .b-name { font-size: 11px; font-weight: 700; color: #1a1a1f; letter-spacing: -0.2px; }
+  .badge-card .b-desc { font-size: 10px; color: #8a8a95; line-height: 1.3; font-weight: 500; }
+  .badge-card.locked .b-lock { position: absolute; top: 6px; right: 6px; font-size: 12px; }
+
+  /* Rank-up modal */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px);
+    display: flex; align-items: center; justify-content: center; z-index: 100;
+    animation: fadeIn .3s;
+  }
+  .rank-up-modal {
+    background: linear-gradient(160deg, #1a1a1f 0%, #2d2d38 100%);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 20px; padding: 30px 28px; text-align: center;
+    max-width: 86%; width: 340px; color: #fff;
+    animation: rankUpPop .5s cubic-bezier(0.2, 1.3, 0.6, 1);
+    position: relative; overflow: hidden;
+  }
+  .rank-up-modal::before {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(circle at center, var(--rank-color, gold), transparent 70%);
+    opacity: 0.2;
+  }
+  @keyframes rankUpPop { 0% { transform: scale(0.3); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+  .rank-up-modal .label { font-size: 11px; color: #f5a623; font-weight: 800; letter-spacing: 3px; position: relative; }
+  .rank-up-modal .big-icon { font-size: 80px; margin: 14px 0 6px; position: relative; animation: rankIconSpin 1s ease; }
+  @keyframes rankIconSpin { 0% { transform: rotateY(0); } 100% { transform: rotateY(360deg); } }
+  .rank-up-modal .rank-title { font-size: 28px; font-weight: 900; letter-spacing: -0.5px; margin-bottom: 6px; position: relative; }
+  .rank-up-modal .rank-sub { font-size: 13px; color: #9a9aa8; margin-bottom: 22px; position: relative; }
+  .rank-up-modal .close-btn {
+    width: 100%; height: 48px; padding: 0 20px; border: 0; border-radius: 10px;
+    background: var(--rank-color, #3b82f6); color: #fff;
+    font-weight: 800; font-size: 14px; cursor: pointer; letter-spacing: -0.2px;
+    position: relative; text-align: center;
+    font-family: inherit;
+  }
+
+  /* Badge toast (mid-play notification) */
+  .badge-toast {
+    position: absolute; top: 12px; left: 50%; transform: translateX(-50%) translateY(-80px);
+    background: #1a1a1f; color: #fff;
+    padding: 10px 16px; border-radius: 12px;
+    display: flex; align-items: center; gap: 8px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+    z-index: 50; pointer-events: none;
+    opacity: 0; transition: transform .35s cubic-bezier(0.2, 1.3, 0.6, 1), opacity .35s;
+    font-size: 13px; font-weight: 700; white-space: nowrap;
+  }
+  .badge-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .badge-toast .bt-icon { font-size: 22px; }
+  .badge-toast .bt-text { display: flex; flex-direction: column; gap: 1px; }
+  .badge-toast .bt-label { font-size: 10px; color: #f5a623; font-weight: 800; letter-spacing: 1px; }
+
+  /* Danger pulse when last heart */
+  .problem-area.danger { animation: dangerPulse 1.2s ease-in-out infinite; }
+  @keyframes dangerPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(229, 62, 62, 0); }
+    50% { box-shadow: 0 0 0 4px rgba(229, 62, 62, 0.15), inset 0 0 0 2px rgba(229, 62, 62, 0.2); }
+  }
+
+  /* Perfect banner on result */
+  .perfect-banner {
+    background: linear-gradient(90deg, #f59e0b 0%, #ef4444 100%);
+    color: #fff; padding: 6px 16px; border-radius: 8px;
+    font-size: 11px; font-weight: 900; letter-spacing: 3px;
+    margin-bottom: 12px; animation: perfectPulse 1.2s ease-in-out infinite;
+  }
+  @keyframes perfectPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+
+  /* Treasure chest */
+  .chest {
+    font-size: 60px; cursor: pointer; margin: 14px 0;
+    animation: chestShake 0.6s ease-in-out infinite alternate;
+    transition: transform 0.2s;
+  }
+  .chest:active { transform: scale(0.92); }
+  .chest.opened { animation: none; }
+  @keyframes chestShake {
+    0% { transform: rotate(-4deg); }
+    100% { transform: rotate(4deg); }
+  }
+  .chest-hint { font-size: 11px; color: #8a8a95; font-weight: 700; letter-spacing: 1px; }
+
+  /* Mute toggle */
+  .mute-btn {
+    position: absolute; top: 16px; right: 60px;
+    background: transparent; border: 0; font-size: 16px;
+    cursor: pointer; z-index: 6;
+  }
+
+  /* 보스 배너 */
+  .boss-banner {
+    background: linear-gradient(90deg, #dc2626 0%, #f59e0b 50%, #dc2626 100%);
+    background-size: 200% 100%;
+    color: #fff; text-align: center;
+    padding: 8px 16px; border-radius: 8px;
+    font-size: 13px; font-weight: 900; letter-spacing: 3px;
+    margin-bottom: 12px;
+    animation: bossShine 2s linear infinite;
+    box-shadow: 0 4px 14px rgba(220, 38, 38, 0.3);
+  }
+  .boss-banner.daily {
+    background: linear-gradient(90deg, #2563eb 0%, #06b6d4 50%, #2563eb 100%);
+    background-size: 200% 100%;
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);
+  }
+  @keyframes bossShine { 0% { background-position: 0% 0%; } 100% { background-position: 200% 0%; } }
+  .problem-area.boss {
+    border-color: rgba(220, 38, 38, 0.3);
+    box-shadow: 0 0 0 1px rgba(220, 38, 38, 0.1), 0 4px 14px rgba(220, 38, 38, 0.1);
+  }
+
+  /* 타이머 바 */
+  .timer-bar {
+    height: 6px; background: rgba(0,0,0,0.06); border-radius: 3px;
+    overflow: hidden; margin-bottom: 12px;
+  }
+  .timer-fill {
+    height: 100%; width: 100%;
+    background: linear-gradient(90deg, #10b981 0%, #f59e0b 50%, #ef4444 100%);
+    background-size: 200% 100%;
+    border-radius: 3px;
+    transform-origin: left center;
+  }
+  @keyframes countdown {
+    0% { width: 100%; background-position: 0% 0%; }
+    50% { background-position: 50% 0%; }
+    100% { width: 0%; background-position: 100% 0%; }
+  }
+
+  /* 데일리 챌린지 카드 */
+  .daily-card {
+    display: flex; align-items: center; gap: 14px;
+    background: linear-gradient(135deg, #2563eb 0%, #06b6d4 100%);
+    color: #fff;
+    padding: 16px 18px; border-radius: 14px;
+    margin-bottom: 18px; cursor: pointer;
+    box-shadow: 0 6px 18px rgba(37, 99, 235, 0.25);
+    transition: transform .12s, box-shadow .12s;
+    position: relative; overflow: hidden;
+  }
+  .daily-card:active:not(.done) { transform: scale(0.98); }
+  .daily-card::before {
+    content: ''; position: absolute; right: -30px; top: -30px;
+    width: 100px; height: 100px; border-radius: 50%;
+    background: rgba(255,255,255,0.15);
+  }
+  .daily-card.done {
+    background: linear-gradient(135deg, #6b7280 0%, #9ca3af 100%);
+    cursor: default;
+    box-shadow: 0 4px 12px rgba(107, 114, 128, 0.2);
+  }
+  .daily-icon { font-size: 32px; line-height: 1; position: relative; }
+  .daily-text { flex: 1; min-width: 0; position: relative; }
+  .daily-label { font-size: 15px; font-weight: 800; letter-spacing: -0.3px; margin-bottom: 2px; }
+  .daily-desc { font-size: 11px; opacity: 0.9; font-weight: 600; letter-spacing: 0.2px; }
+  .daily-arrow { font-size: 18px; font-weight: 900; opacity: 0.8; position: relative; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+/* ============================================================
+   Math Quest — 초등 수학 게임 앱
+   단일 파일 버전. 문제는 매 플레이마다 생성기에서 새로 생성됨.
+   스테이지가 올라갈수록 숫자 범위·스텝 수가 늘어나 난이도 상승.
+   ============================================================ */
+
+// ---------- Utilities ----------
+const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+const pick = arr => arr[rand(0, arr.length - 1)];
+const gcd = (a, b) => { a = Math.abs(a); b = Math.abs(b); while (b) [a, b] = [b, a % b]; return a || 1; };
+function reduceFrac(n, d) {
+  const g = gcd(n, d);
+  return [n / g, d / g];
+}
+function fracStr(n, d) {
+  [n, d] = reduceFrac(n, d);
+  if (d === 1) return String(n);
+  return `${n}/${d}`;
+}
+function roundDec(x, p = 2) {
+  const m = Math.pow(10, p);
+  return Math.round(x * m) / m;
+}
+
+// ---------- Answer comparison ----------
+// Handles: integers, decimals (tolerance), fractions "a/b", mixed numbers "a b/c"
+function parseAnswer(s) {
+  if (s == null) return null;
+  s = String(s).trim().replace(/\s+/g, ' ');
+  if (s === '') return null;
+  // Mixed number: "1 1/2"
+  const mix = s.match(/^(-?\d+)\s+(\d+)\/(\d+)$/);
+  if (mix) {
+    const whole = +mix[1], n = +mix[2], d = +mix[3];
+    if (d === 0) return null;
+    const sign = whole < 0 ? -1 : 1;
+    return { kind: 'frac', value: sign * (Math.abs(whole) * d + n) / d, num: sign * (Math.abs(whole) * d + n), den: d };
+  }
+  // Fraction "a/b"
+  const fm = s.match(/^(-?\d+)\/(\d+)$/);
+  if (fm) {
+    const n = +fm[1], d = +fm[2];
+    if (d === 0) return null;
+    return { kind: 'frac', value: n / d, num: n, den: d };
+  }
+  // Number (int or decimal)
+  if (/^-?\d+(\.\d+)?$/.test(s)) {
+    return { kind: 'num', value: parseFloat(s) };
+  }
+  return null;
+}
+
+function checkAnswer(userStr, expected) {
+  const u = parseAnswer(userStr);
+  if (!u) return false;
+  const e = parseAnswer(String(expected));
+  if (!e) return false;
+  // For fraction expected, accept any equivalent fraction OR the decimal value (with tolerance)
+  return Math.abs(u.value - e.value) < 1e-6;
+}
+
+// ============================================================
+// 문제 생성기 — 각 단원마다 generate(stage) 함수 제공
+// stage는 1부터 시작. 숫자 상한·연산 횟수 등이 stage에 비례하여 증가.
+// ============================================================
+
+const GRADES = {
+  1: {
+    name: "1학년",
+    emoji: "1",
+    color: "#3b82f6",
+    desc: "기초 덧셈·뺄셈, 50까지의 수",
+    units: [
+      {
+        id: "g1-add10", name: "10까지 덧셈", icon: "➕", color: "#ffd9e0",
+        generate(stage) {
+          // Phase 진화: 1~3 기본 / 4~6 큰 숫자 / 7~9 빈칸 / 10~12 받아올림 / 13+ 세 수
+          if (stage <= 3) {
+            const max = 2 + stage;
+            const a = rand(1, max);
+            const b = rand(1, Math.min(max, 10 - a));
+            return { q: `${a} + ${b} = ?`, a: a + b };
+          }
+          if (stage <= 6) {
+            const a = rand(2, 9);
+            const b = rand(1, Math.min(9, 10 - a));
+            return { q: `${a} + ${b} = ?`, a: a + b };
+          }
+          if (stage <= 9) {
+            // 빈칸 위치 변환: a + ? = c
+            const a = rand(2, 7);
+            const ans = rand(1, 9 - a);
+            return { q: `${a} + ? = ${a + ans}`, a: ans };
+          }
+          if (stage <= 12) {
+            // 받아올림 (합 11~18)
+            const a = rand(5, 9);
+            const b = rand(Math.max(2, 11 - a), 9);
+            return { q: `${a} + ${b} = ?`, a: a + b };
+          }
+          // 세 수 합 (10 이내)
+          const a = rand(1, 4), b = rand(1, 4), c = rand(1, Math.min(5, 10 - a - b));
+          return { q: `${a} + ${b} + ${c} = ?`, a: a + b + c };
+        }
+      },
+      {
+        id: "g1-sub10", name: "10까지 뺄셈", icon: "➖", color: "#ffe7d1",
+        generate(stage) {
+          // Phase: 1~3 기본 / 4~6 더 큰 / 7~9 빈칸 / 10~12 받아내림(20에서) / 13+ 세 수 뺄셈
+          if (stage <= 3) {
+            const a = rand(3, 5 + stage);
+            const b = rand(1, a - 1);
+            return { q: `${a} - ${b} = ?`, a: a - b };
+          }
+          if (stage <= 6) {
+            const a = rand(5, 10);
+            const b = rand(1, a - 1);
+            return { q: `${a} - ${b} = ?`, a: a - b };
+          }
+          if (stage <= 9) {
+            // 빈칸: a - ? = c
+            const a = rand(5, 10);
+            const ans = rand(1, a - 1);
+            return { q: `${a} - ? = ${a - ans}`, a: ans };
+          }
+          if (stage <= 12) {
+            // 십몇 - 한 자리 (받아내림)
+            const a = rand(11, 18);
+            const b = rand(a - 9, 9);
+            return { q: `${a} - ${b} = ?`, a: a - b };
+          }
+          // 세 수: a - b - c
+          const a = rand(8, 15);
+          const b = rand(1, Math.floor(a / 2));
+          const c = rand(1, Math.max(1, a - b - 1));
+          return { q: `${a} - ${b} - ${c} = ?`, a: a - b - c };
+        }
+      },
+      {
+        id: "g1-add20", name: "20까지 덧셈", icon: "🔟", color: "#ffd6b0",
+        generate(stage) {
+          // Phase: 1~3 합 11~14 / 4~6 11~17 / 7~9 빈칸 / 10~12 합 18~20 / 13+ 두자리 + 한자리
+          if (stage <= 3) {
+            const a = rand(7, 9), b = rand(11 - a, 14 - a);
+            return { q: `${a} + ${b} = ?`, a: a + b };
+          }
+          if (stage <= 6) {
+            const a = rand(5, 9), b = rand(Math.max(2, 11 - a), Math.min(9, 17 - a));
+            return { q: `${a} + ${b} = ?`, a: a + b };
+          }
+          if (stage <= 9) {
+            const a = rand(5, 9), ans = rand(11 - a, Math.min(9, 17 - a));
+            return { q: `${a} + ? = ${a + ans}`, a: ans };
+          }
+          if (stage <= 12) {
+            const a = rand(8, 9), b = rand(11 - a, Math.min(9, 20 - a));
+            return { q: `${a} + ${b} = ?`, a: a + b };
+          }
+          // 두 자리 + 한 자리 (합 ≤ 30)
+          const a = rand(11, 19), b = rand(2, Math.min(9, 30 - a));
+          return { q: `${a} + ${b} = ?`, a: a + b };
+        }
+      },
+      {
+        id: "g1-sub20", name: "20까지 뺄셈", icon: "💫", color: "#f7d6ff",
+        generate(stage) {
+          if (stage <= 3) {
+            const a = rand(11, 14), b = rand(2, Math.min(9, a - 5));
+            return { q: `${a} - ${b} = ?`, a: a - b };
+          }
+          if (stage <= 6) {
+            const a = rand(11, 17), b = rand(a - 9, 9);
+            return { q: `${a} - ${b} = ?`, a: a - b };
+          }
+          if (stage <= 9) {
+            const a = rand(11, 17), ans = rand(1, 9);
+            const b = a - ans;
+            return { q: `${a} - ? = ${ans}`, a: b };
+          }
+          if (stage <= 12) {
+            const a = rand(15, 20), b = rand(a - 9, 9);
+            return { q: `${a} - ${b} = ?`, a: a - b };
+          }
+          // 두 자리 - 한 자리 (받아내림 다양)
+          const a = rand(20, 30), b = rand(2, 9);
+          return { q: `${a} - ${b} = ?`, a: a - b };
+        }
+      },
+      {
+        id: "g1-num50", name: "50까지의 수", icon: "🔢", color: "#d6edff",
+        generate(stage) {
+          const cap = Math.min(50, 20 + stage * 5);
+          const forms = [
+            () => {
+              const tens = rand(1, Math.floor(cap / 10));
+              const ones = rand(0, 9);
+              return { q: `10이 ${tens}개, 1이 ${ones}개인 수는?`, a: tens * 10 + ones };
+            },
+            () => {
+              const n = rand(10, cap);
+              return { q: `${n}에서 1 큰 수는?`, a: n + 1 };
+            },
+            () => {
+              const n = rand(11, cap);
+              return { q: `${n}보다 1 작은 수는?`, a: n - 1 };
+            },
+          ];
+          return pick(forms)();
+        }
+      },
+      {
+        id: "g1-mixed", name: "덧뺄 혼합", icon: "🎲", color: "#e0d6ff",
+        generate(stage) {
+          const max = Math.min(10, 5 + stage);
+          const a = rand(3, max);
+          const b = rand(1, max - 1);
+          const c = rand(1, Math.min(5, max));
+          const ops = rand(0, 1) === 0 ? ['+','-'] : ['-','+'];
+          let v = a;
+          v = ops[0] === '+' ? v + b : v - b;
+          if (v < 0) return this.generate(stage);
+          v = ops[1] === '+' ? v + c : v - c;
+          if (v < 0) return this.generate(stage);
+          return { q: `${a} ${ops[0]} ${b} ${ops[1]} ${c} = ?`, a: v };
+        }
+      },
+      {
+        id: "g1-pattern", name: "규칙 찾기", icon: "🔁", color: "#ffe8c6",
+        generate(stage) {
+          // Phase: 1~3 단순 / 4~6 거꾸로 / 7~9 ABAB 패턴 / 10~12 큰 step / 13+ 두 step 변환
+          if (stage <= 3) {
+            const start = rand(1, 5);
+            const step = 1;
+            return { q: `${start}, ${start+step}, ${start+2*step}, ?, ${start+4*step} 의 ?는?`, a: start + 3*step };
+          }
+          if (stage <= 6) {
+            const step = rand(1, 2);
+            const start = 3*step + rand(5, 10);
+            return { q: `${start}, ${start-step}, ${start-2*step}, ? (거꾸로)`, a: start - 3*step };
+          }
+          if (stage <= 9) {
+            let x = rand(1, 9), y = rand(1, 9);
+            while (y === x) y = rand(1, 9);
+            return { q: `${x}, ${y}, ${x}, ${y}, ${x}, ? 에 들어갈 수는?`, a: y };
+          }
+          if (stage <= 12) {
+            const start = rand(2, 8);
+            const step = rand(2, 4);
+            return { q: `${start}, ${start+step}, ${start+2*step}, ${start+3*step}, ? (같은 규칙)`, a: start + 4*step };
+          }
+          // ABCABC 패턴
+          const a = rand(1, 5), b = rand(1, 5), c = rand(1, 5);
+          if (a === b || b === c || a === c) return this.generate(stage);
+          return { q: `${a}, ${b}, ${c}, ${a}, ${b}, ? (반복 규칙)`, a: c };
+        }
+      },
+      {
+        id: "g1-shape", name: "모양 알아보기", icon: "🔺", color: "#d4f4ff",
+        generate(stage) {
+          const shapes = [
+            { name: "삼각형", sides: 3 },
+            { name: "사각형", sides: 4 },
+            { name: "오각형", sides: 5 },
+            { name: "육각형", sides: 6 },
+            { name: "칠각형", sides: 7 },
+            { name: "팔각형", sides: 8 },
+          ];
+          if (stage <= 3) {
+            const s = pick(shapes.slice(0, 2));
+            return { q: `${s.name}의 변은 몇 개?`, a: s.sides };
+          }
+          if (stage <= 6) {
+            const s = pick(shapes.slice(0, 4));
+            const prop = pick(["변", "꼭짓점"]);
+            return { q: `${s.name}의 ${prop}은 몇 개?`, a: s.sides };
+          }
+          if (stage <= 9) {
+            const s = pick(shapes);
+            const prop = pick(["변", "꼭짓점"]);
+            return { q: `${s.name}의 ${prop}의 수는?`, a: s.sides };
+          }
+          if (stage <= 12) {
+            // 합 문제: 두 도형의 변의 수 합
+            const s1 = pick(shapes), s2 = pick(shapes);
+            return { q: `${s1.name}과 ${s2.name}의 변의 수의 합은?`, a: s1.sides + s2.sides };
+          }
+          // 차 문제
+          const s1 = pick(shapes.slice(2)), s2 = pick(shapes.slice(0, 2));
+          return { q: `${s1.name}의 변은 ${s2.name}보다 몇 개 더 많을까?`, a: s1.sides - s2.sides };
+        }
+      },
+    ]
+  },
+
+  2: {
+    name: "2학년",
+    emoji: "2",
+    color: "#10b981",
+    desc: "세 자리 수, 곱셈구구, 시각과 시간",
+    units: [
+      {
+        id: "g2-add2", name: "두 자리 덧셈", icon: "➕", color: "#ffeac6",
+        generate(stage) {
+          const cap = Math.min(99, 20 + stage * 10);
+          const a = rand(10, cap);
+          const b = rand(10, cap);
+          return { q: `${a} + ${b} = ?`, a: a + b };
+        }
+      },
+      {
+        id: "g2-sub2", name: "두 자리 뺄셈", icon: "➖", color: "#ffcfc6",
+        generate(stage) {
+          const cap = Math.min(99, 30 + stage * 10);
+          const a = rand(20, cap);
+          const b = rand(10, a - 1);
+          return { q: `${a} - ${b} = ?`, a: a - b };
+        }
+      },
+      {
+        id: "g2-num3", name: "세 자리 수", icon: "🔢", color: "#cfe6ff",
+        generate(stage) {
+          const forms = [
+            () => {
+              const h = rand(1, 9), t = rand(0, 9), o = rand(0, 9);
+              return { q: `백의 자리 ${h}, 십의 자리 ${t}, 일의 자리 ${o}인 수는?`, a: h*100 + t*10 + o };
+            },
+            () => {
+              const n = rand(100, 999);
+              const pos = pick(['백', '십', '일']);
+              const d = pos === '백' ? Math.floor(n/100) : pos === '십' ? Math.floor(n/10)%10 : n%10;
+              return { q: `${n}에서 ${pos}의 자리 숫자는?`, a: d };
+            },
+            () => {
+              const n = rand(100, 899);
+              return { q: `${n}보다 100 큰 수는?`, a: n + 100 };
+            },
+          ];
+          return pick(forms)();
+        }
+      },
+      {
+        id: "g2-mul", name: "곱셈구구", icon: "✖️", color: "#ffe0f5",
+        generate(stage) {
+          // Phase 1~3: 2,5단 / 4~6: 3,4,6단 / 7~9: 7,8,9단 / 10~12: 빈칸 / 13+: 거꾸로 (몫 찾기)
+          if (stage <= 3) {
+            const a = pick([2, 5]);
+            const b = rand(2, 9);
+            return { q: `${a} × ${b} = ?`, a: a * b };
+          }
+          if (stage <= 6) {
+            const a = pick([3, 4, 6]);
+            const b = rand(2, 9);
+            return { q: `${a} × ${b} = ?`, a: a * b };
+          }
+          if (stage <= 9) {
+            const a = pick([7, 8, 9]);
+            const b = rand(2, 9);
+            return { q: `${a} × ${b} = ?`, a: a * b };
+          }
+          if (stage <= 12) {
+            // 빈칸: a × ? = c
+            const a = rand(2, 9), ans = rand(2, 9);
+            return { q: `${a} × ? = ${a * ans}`, a: ans };
+          }
+          // 큰 곱셈 두 자리 × 한 자리
+          const a = rand(11, 20), b = rand(2, 9);
+          return { q: `${a} × ${b} = ?`, a: a * b };
+        }
+      },
+      {
+        id: "g2-length", name: "길이 재기", icon: "📏", color: "#d9f5d4",
+        generate(stage) {
+          const forms = [
+            () => {
+              const m = rand(1, 5), cm = rand(1, 99);
+              return { q: `${m}m ${cm}cm = ? cm`, a: m * 100 + cm };
+            },
+            () => {
+              const cm = rand(101, 500);
+              return { q: `${cm}cm = ? m ? cm 중 m 값은?`, a: Math.floor(cm / 100) };
+            },
+          ];
+          return pick(forms)();
+        }
+      },
+      {
+        id: "g2-time", name: "시각과 시간", icon: "⏰", color: "#fff3b0",
+        generate(stage) {
+          const forms = [
+            () => {
+              const h = rand(1, 5), m = rand(1, 5);
+              return { q: `${h}시간 ${m*10}분 = ? 분`, a: h * 60 + m * 10 };
+            },
+            () => {
+              const m = rand(7, 12) * 10;
+              return { q: `${m}분 = 1시간 ? 분`, a: m - 60 };
+            },
+            () => {
+              const h = rand(1, 8);
+              return { q: `오전 ${h}시에서 2시간 후는 오전 몇 시?`, a: h + 2 };
+            },
+          ];
+          return pick(forms)();
+        }
+      },
+      {
+        id: "g2-pattern", name: "규칙 찾기", icon: "🔁", color: "#d9e6ff",
+        generate(stage) {
+          const r1 = () => {
+            const start = rand(2, 10);
+            const step = rand(2, Math.min(5, 2 + Math.floor(stage/2)));
+            return { q: `${start}, ${start+step}, ${start+2*step}, ${start+3*step}, ? (같은 규칙)`, a: start + 4*step };
+          };
+          const r2 = () => {
+            const start = rand(1, 8);
+            const step = rand(2, 4);
+            const terms = [start, start+step, start+2*step, start+3*step, start+4*step];
+            const missingIdx = rand(1, 3);
+            const hidden = terms[missingIdx];
+            const display = [...terms];
+            display[missingIdx] = '?';
+            return { q: `${display.join(', ')} 에서 ?는?`, a: hidden };
+          };
+          const r3 = () => {
+            // 구구단 기반
+            const mult = rand(2, Math.min(5, 2 + Math.floor(stage/2)));
+            const k = rand(1, 4);
+            return { q: `${mult}, ${mult*2}, ${mult*3}, ${mult*4}, ? (곱셈 규칙)`, a: mult * 5 };
+          };
+          return pick([r1, r2, r3])();
+        }
+      },
+      {
+        id: "g2-shape", name: "평면도형", icon: "📏", color: "#ffe0c6",
+        generate(stage) {
+          const shapes = [
+            { name: "삼각형", sides: 3 },
+            { name: "사각형", sides: 4 },
+            { name: "오각형", sides: 5 },
+            { name: "육각형", sides: 6 },
+            { name: "칠각형", sides: 7 },
+            { name: "팔각형", sides: 8 },
+          ];
+          const s = pick(shapes);
+          const p = pick(["변의 수", "꼭짓점의 수", "각의 수"]);
+          return { q: `${s.name}의 ${p}는?`, a: s.sides };
+        }
+      },
+    ]
+  },
+
+  3: {
+    name: "3학년",
+    emoji: "3",
+    color: "#f59e0b",
+    desc: "나눗셈, 분수·소수 기초, 사고력 문장제",
+    units: [
+      {
+        id: "g3-add3", name: "세 자리 덧뺄", icon: "➕", color: "#cdefe0",
+        generate(stage) {
+          const cap = Math.min(999, 200 + stage * 100);
+          const a = rand(100, cap);
+          const b = rand(50, cap);
+          const op = rand(0, 1) === 0 ? '+' : '-';
+          if (op === '-' && b >= a) return this.generate(stage);
+          return { q: `${a} ${op} ${b} = ?`, a: op === '+' ? a + b : a - b };
+        }
+      },
+      {
+        id: "g3-mul", name: "곱셈", icon: "✖️", color: "#ffd6c9",
+        generate(stage) {
+          const cap = Math.min(99, 12 + stage * 5);
+          const a = rand(10, cap);
+          const b = rand(2, 9);
+          return { q: `${a} × ${b} = ?`, a: a * b };
+        }
+      },
+      {
+        id: "g3-div", name: "나눗셈", icon: "➗", color: "#d7d0ff",
+        generate(stage) {
+          const cap = Math.min(9, 2 + stage);
+          const b = rand(2, cap);
+          const ans = rand(2, Math.min(20, 4 + stage));
+          return { q: `${b * ans} ÷ ${b} = ?`, a: ans };
+        }
+      },
+      {
+        id: "g3-frac", name: "분수 기초", icon: "🥧", color: "#ffe1f0",
+        generate(stage) {
+          const forms = [
+            () => {
+              const d = rand(3, 9);
+              const n = rand(1, d - 1);
+              return { q: `전체를 똑같이 ${d}로 나눈 것 중 ${n}은 분수로? (a/b로 입력)`, a: `${n}/${d}` };
+            },
+            () => {
+              const d = rand(4, 8);
+              const n = rand(1, d - 1);
+              return { q: `${n}/${d}에서 분모는?`, a: d };
+            },
+            () => {
+              const d = rand(4, 8);
+              const n = rand(1, d - 1);
+              return { q: `${n}/${d}에서 분자는?`, a: n };
+            },
+          ];
+          return pick(forms)();
+        }
+      },
+      {
+        id: "g3-dec", name: "소수 기초", icon: "🎯", color: "#e0f0d9",
+        generate(stage) {
+          const forms = [
+            () => {
+              const n = rand(1, 9);
+              return { q: `0.1이 ${n}개인 수는?`, a: roundDec(n * 0.1, 1) };
+            },
+            () => {
+              const w = rand(1, 5), d = rand(1, 9);
+              return { q: `${w}와 0.1이 ${d}개인 수는?`, a: roundDec(w + d * 0.1, 1) };
+            },
+            () => {
+              const a = roundDec(rand(1, 9) * 0.1, 1);
+              const b = roundDec(rand(1, 9) * 0.1, 1);
+              return { q: `${a} + ${b} = ?`, a: roundDec(a + b, 1) };
+            },
+          ];
+          return pick(forms)();
+        }
+      },
+      {
+        id: "g3-shape", name: "도형의 둘레", icon: "📐", color: "#fff0b0",
+        generate(stage) {
+          const forms = [
+            () => {
+              const s = rand(3, 3 + stage * 2);
+              return { q: `한 변이 ${s}cm인 정사각형의 둘레는? (cm)`, a: s * 4 };
+            },
+            () => {
+              const w = rand(3, 10), h = rand(3, 10);
+              return { q: `가로 ${w}cm, 세로 ${h}cm 직사각형의 둘레는? (cm)`, a: (w + h) * 2 };
+            },
+            () => {
+              const s = rand(3, 9);
+              return { q: `한 변이 ${s}cm인 정삼각형의 둘레는? (cm)`, a: s * 3 };
+            },
+          ];
+          return pick(forms)();
+        }
+      },
+      {
+        id: "g3-word", name: "사고력 문장제", icon: "💭", color: "#ffd6d6",
+        generate(stage) {
+          const forms = [
+            () => {
+              const friends = rand(2, 5);
+              const per = rand(3, 3 + stage * 2);
+              const total = per * friends;
+              return { q: `연필 ${total}자루를 친구 ${friends}명에게 똑같이 나눠주면 한 명당 몇 자루?`, a: per };
+            },
+            () => {
+              const a = rand(2, 6), b = rand(2, Math.min(9, 3 + stage));
+              return { q: `사과가 한 상자에 ${a}개씩 ${b}상자 있어요. 모두 몇 개?`, a: a * b };
+            },
+            () => {
+              const price = rand(2, 9) * 100;
+              const qty = rand(2, Math.min(6, 2 + stage));
+              return { q: `${price}원짜리 과자를 ${qty}개 사면 얼마? (원)`, a: price * qty };
+            },
+            () => {
+              const total = rand(10, 20 + stage * 5);
+              const gone = rand(1, total - 1);
+              return { q: `구슬 ${total}개 중 ${gone}개를 잃어버렸어요. 남은 개수는?`, a: total - gone };
+            },
+            () => {
+              const buses = rand(2, 4);
+              const per = rand(10, 20);
+              return { q: `버스 ${buses}대에 각각 ${per}명씩 탔어요. 모두 몇 명?`, a: buses * per };
+            },
+          ];
+          return pick(forms)();
+        }
+      },
+      {
+        id: "g3-angle", name: "각과 도형 성질", icon: "📐", color: "#d6e8ff",
+        generate(stage) {
+          const forms = [
+            () => ({ q: "직각의 크기는 몇 도?", a: 90 }),
+            () => ({ q: "삼각형 내각의 합은 몇 도?", a: 180 }),
+            () => ({ q: "사각형 내각의 합은 몇 도?", a: 360 }),
+            () => {
+              const x = rand(20, 70);
+              return { q: `직각에 ${x}°를 더하면 몇 도?`, a: 90 + x };
+            },
+            () => {
+              const a1 = rand(30, 70);
+              const a2 = rand(30, 180 - 30 - a1);
+              return { q: `삼각형의 두 각이 ${a1}°와 ${a2}°일 때 나머지 각은?`, a: 180 - a1 - a2 };
+            },
+            () => ({ q: "정사각형의 한 각의 크기는 몇 도?", a: 90 }),
+          ];
+          return pick(forms)();
+        }
+      },
+    ]
+  },
+
+  4: {
+    name: "4학년",
+    emoji: "4",
+    color: "#8b5cf6",
+    desc: "큰 수, 분수·소수 연산, 각도와 다각형",
+    units: [
+      {
+        id: "g4-bignum", name: "큰 수", icon: "🔢", color: "#e0d5f5",
+        generate(stage) {
+          const cap = Math.min(9999, 1000 + stage * 500);
+          const a = rand(500, cap);
+          const b = rand(500, cap);
+          const op = pick(['+','-']);
+          if (op === '-' && b >= a) return this.generate(stage);
+          return { q: `${a} ${op} ${b} = ?`, a: op === '+' ? a + b : a - b };
+        }
+      },
+      {
+        id: "g4-mul3", name: "곱셈 (두 자리×두 자리)", icon: "✖️", color: "#ffd2e2",
+        generate(stage) {
+          const cap = Math.min(30, 11 + stage * 2);
+          const a = rand(11, cap);
+          const b = rand(11, cap);
+          return { q: `${a} × ${b} = ?`, a: a * b };
+        }
+      },
+      {
+        id: "g4-div2", name: "나눗셈", icon: "➗", color: "#c9eaff",
+        generate(stage) {
+          const b = rand(2, Math.min(9, 2 + stage));
+          const ans = rand(10, Math.min(99, 15 + stage * 5));
+          return { q: `${b * ans} ÷ ${b} = ?`, a: ans };
+        }
+      },
+      {
+        id: "g4-angle", name: "각도", icon: "📐", color: "#fff0b0",
+        generate(stage) {
+          const forms = [
+            () => {
+              const a = rand(20, 70), b = rand(20, 110);
+              return { q: `${a}° + ${b}° = ? (°)`, a: a + b };
+            },
+            () => {
+              const total = pick([90, 180]);
+              const a = rand(20, total - 20);
+              return { q: `${total}°에서 ${a}°를 뺀 각도는?`, a: total - a };
+            },
+            () => {
+              return { q: `직각은 몇 도?`, a: 90 };
+            },
+          ];
+          return pick(forms)();
+        }
+      },
+      {
+        id: "g4-frac-sd", name: "분수 덧뺄 (동분모)", icon: "🥧", color: "#ffd6e7",
+        generate(stage) {
+          const d = rand(4, Math.min(12, 5 + stage));
+          const a = rand(1, d - 2);
+          const b = rand(1, d - a - 1);
+          const op = pick(['+','-']);
+          const num = op === '+' ? a + b : a - b;
+          if (num <= 0) return this.generate(stage);
+          return { q: `${a}/${d} ${op} ${b}/${d} = ? (a/b로 입력, 기약분수)`, a: fracStr(num, d) };
+        }
+      },
+      {
+        id: "g4-dec-as", name: "소수 덧뺄", icon: "🎯", color: "#d0f0d0",
+        generate(stage) {
+          const mk = () => roundDec(rand(10, 30 + stage * 10) / 10, 1);
+          const a = mk(), b = mk();
+          const op = pick(['+','-']);
+          if (op === '-' && b >= a) return this.generate(stage);
+          return { q: `${a} ${op} ${b} = ?`, a: roundDec(op === '+' ? a + b : a - b, 1) };
+        }
+      },
+      {
+        id: "g4-pattern", name: "수 배열 규칙", icon: "🔢", color: "#e0d6ff",
+        generate(stage) {
+          // Phase 진화 — 등차 → 등비 → 늘어나는 차이 → 빈칸 → 두 단계 패턴
+          if (stage <= 3) {
+            const start = rand(5, 20);
+            const step = rand(2, 5);
+            return { q: `${start}, ${start+step}, ${start+2*step}, ${start+3*step}, ? (같은 규칙)`, a: start + 4*step };
+          }
+          if (stage <= 6) {
+            const start = rand(1, 3);
+            const ratio = pick([2, 3]);
+            return { q: `${start}, ${start*ratio}, ${start*ratio*ratio}, ? (×${ratio} 규칙)`, a: start * ratio**3 };
+          }
+          if (stage <= 9) {
+            const start = rand(1, 5);
+            const arr = [start];
+            for (let i = 1; i <= 4; i++) arr.push(arr[i-1] + i);
+            return { q: `${arr.slice(0,4).join(', ')}, ? (늘어나는 차이)`, a: arr[3] + 4 };
+          }
+          if (stage <= 12) {
+            // 빈칸 (등차 수열의 가운데 자리)
+            const start = rand(5, 25);
+            const step = rand(3, 8);
+            const seq = [start, start+step, start+2*step, start+3*step, start+4*step];
+            const idx = rand(1, 3);
+            const hidden = seq[idx];
+            const display = [...seq];
+            display[idx] = '?';
+            return { q: `${display.join(', ')} 에서 ?는?`, a: hidden };
+          }
+          // 두 단계 패턴: +a, ×b 교차
+          const start = rand(2, 5);
+          const a = rand(2, 4), b = rand(2, 3);
+          // start, start+a, (start+a)*b, (start+a)*b+a, ((start+a)*b+a)*b
+          const t1 = start, t2 = t1 + a, t3 = t2 * b, t4 = t3 + a;
+          return { q: `${t1}, ${t2}, ${t3}, ${t4}, ? (+${a}, ×${b} 교차)`, a: t4 * b };
+        }
+      },
+      {
+        id: "g4-shape", name: "다각형과 사각형", icon: "⬛", color: "#d4fff0",
+        generate(stage) {
+          const forms = [
+            () => ({ q: "정사각형의 한 각의 크기는 몇 도?", a: 90 }),
+            () => ({ q: "직사각형의 대각선은 몇 개?", a: 2 }),
+            () => ({ q: "사다리꼴의 평행한 변은 몇 쌍?", a: 1 }),
+            () => ({ q: "평행사변형에서 마주 보며 평행한 변은 몇 쌍?", a: 2 }),
+            () => {
+              const n = rand(5, 8);
+              return { q: `${n}각형의 꼭짓점은 몇 개?`, a: n };
+            },
+            () => {
+              const n = rand(4, 8);
+              return { q: `${n}각형의 대각선은 몇 개? (n(n-3)/2)`, a: n * (n - 3) / 2 };
+            },
+            () => {
+              const n = rand(3, 8);
+              return { q: `${n}각형의 내각의 합은 몇 도? ((n-2)×180)`, a: (n - 2) * 180 };
+            },
+          ];
+          return pick(forms)();
+        }
+      },
+    ]
+  },
+
+  5: {
+    name: "5학년",
+    emoji: "5",
+    color: "#ef4444",
+    desc: "약수·배수, 분수 곱셈, 합동과 대칭",
+    units: [
+      {
+        id: "g5-factor", name: "약수와 배수", icon: "🔗", color: "#cdecdb",
+        generate(stage) {
+          const forms = [
+            () => {
+              const g = rand(2, Math.min(9, 3 + stage));
+              const a = g * rand(2, 5);
+              const b = g * rand(2, 5);
+              const ag = gcd(a, b);
+              return { q: `${a}와 ${b}의 최대공약수는?`, a: ag };
+            },
+            () => {
+              const a = rand(2, 8), b = rand(2, 8);
+              const lcm = a * b / gcd(a, b);
+              return { q: `${a}와 ${b}의 최소공배수는?`, a: lcm };
+            },
+            () => {
+              const n = pick([12, 18, 20, 24, 30, 36]);
+              const divisors = [];
+              for (let i = 1; i <= n; i++) if (n % i === 0) divisors.push(i);
+              return { q: `${n}의 약수의 개수는?`, a: divisors.length };
+            },
+          ];
+          return pick(forms)();
+        }
+      },
+      {
+        id: "g5-frac-diff", name: "분수 덧뺄 (이분모)", icon: "🥧", color: "#ffdceb",
+        generate(stage) {
+          // a/d1 ± b/d2 with small numbers, reducible answer
+          const d1 = rand(2, 6), d2 = rand(2, 6);
+          if (d1 === d2) return this.generate(stage);
+          const a = rand(1, d1 - 1), b = rand(1, d2 - 1);
+          const common = d1 * d2;
+          const op = pick(['+','-']);
+          const num = op === '+' ? a * d2 + b * d1 : a * d2 - b * d1;
+          if (num <= 0) return this.generate(stage);
+          return { q: `${a}/${d1} ${op} ${b}/${d2} = ? (기약분수)`, a: fracStr(num, common) };
+        }
+      },
+      {
+        id: "g5-frac-mul", name: "분수 곱셈", icon: "✖️", color: "#e0d8ff",
+        generate(stage) {
+          // Phase: 1~3 작은 분수 / 4~6 일반 / 7~9 분수 × 자연수 / 10~12 빈칸 / 13+ 세 분수 곱
+          if (stage <= 3) {
+            const d1 = rand(2, 4), d2 = rand(2, 4);
+            const n1 = rand(1, d1 - 1), n2 = rand(1, d2 - 1);
+            return { q: `${n1}/${d1} × ${n2}/${d2} = ? (기약)`, a: fracStr(n1 * n2, d1 * d2) };
+          }
+          if (stage <= 6) {
+            const d1 = rand(2, 6), d2 = rand(2, 6);
+            const n1 = rand(1, d1 - 1), n2 = rand(1, d2 - 1);
+            return { q: `${n1}/${d1} × ${n2}/${d2} = ? (기약)`, a: fracStr(n1 * n2, d1 * d2) };
+          }
+          if (stage <= 9) {
+            // 분수 × 자연수
+            const d = rand(2, 7), n = rand(1, d - 1);
+            const k = rand(2, 6);
+            return { q: `${n}/${d} × ${k} = ? (기약)`, a: fracStr(n * k, d) };
+          }
+          if (stage <= 12) {
+            // 빈칸: a/b × ? = c/d
+            const d1 = rand(2, 5), d2 = rand(2, 5);
+            const n1 = rand(1, d1 - 1), n2 = rand(1, d2 - 1);
+            const ansFrac = fracStr(n1 * n2, d1 * d2);
+            return { q: `${n1}/${d1} × ? = ${ansFrac}`, a: fracStr(n2, d2) };
+          }
+          // 세 분수 곱
+          const d1 = rand(2, 4), d2 = rand(2, 4), d3 = rand(2, 4);
+          const n1 = rand(1, d1 - 1), n2 = rand(1, d2 - 1), n3 = rand(1, d3 - 1);
+          return { q: `${n1}/${d1} × ${n2}/${d2} × ${n3}/${d3} = ? (기약)`, a: fracStr(n1*n2*n3, d1*d2*d3) };
+        }
+      },
+      {
+        id: "g5-dec-mul", name: "소수 곱셈", icon: "🎯", color: "#d0eaff",
+        generate(stage) {
+          const a = roundDec(rand(11, 10 + stage * 5) / 10, 1);
+          const b = rand(2, Math.min(9, 3 + stage));
+          return { q: `${a} × ${b} = ?`, a: roundDec(a * b, 1) };
+        }
+      },
+      {
+        id: "g5-area", name: "다각형의 넓이", icon: "📐", color: "#fff0b0",
+        generate(stage) {
+          const forms = [
+            () => {
+              const w = rand(3, 12), h = rand(3, 12);
+              return { q: `가로 ${w}, 세로 ${h}인 직사각형의 넓이는? (단위 없이 숫자만)`, a: w * h };
+            },
+            () => {
+              const b = rand(4, 12), h = rand(2, 10) * 2; // keep /2 clean
+              return { q: `밑변 ${b}, 높이 ${h}인 삼각형의 넓이는?`, a: b * h / 2 };
+            },
+            () => {
+              const a = rand(3, 9), b = rand(3, 9), h = rand(2, 8) * 2;
+              return { q: `평행한 두 변이 ${a}, ${b}이고 높이가 ${h}인 사다리꼴의 넓이는?`, a: (a + b) * h / 2 };
+            },
+          ];
+          return pick(forms)();
+        }
+      },
+      {
+        id: "g5-avg", name: "평균", icon: "📊", color: "#d0f0d0",
+        generate(stage) {
+          const n = 3 + Math.min(2, Math.floor(stage / 3));
+          // Generate numbers that sum to a multiple of n for clean average
+          let nums;
+          while (true) {
+            nums = Array.from({length: n}, () => rand(5, 5 + stage * 3));
+            if (nums.reduce((s,x)=>s+x,0) % n === 0) break;
+          }
+          const avg = nums.reduce((s,x)=>s+x,0) / n;
+          return { q: `${nums.join(', ')}의 평균은?`, a: avg };
+        }
+      },
+      {
+        id: "g5-symmetry", name: "합동과 대칭", icon: "🔄", color: "#ffd6f0",
+        generate(stage) {
+          const forms = [
+            () => ({ q: "정삼각형의 대칭축은 몇 개?", a: 3 }),
+            () => ({ q: "정사각형의 대칭축은 몇 개?", a: 4 }),
+            () => ({ q: "정오각형의 대칭축은 몇 개?", a: 5 }),
+            () => ({ q: "정육각형의 대칭축은 몇 개?", a: 6 }),
+            () => ({ q: "직사각형의 대칭축은 몇 개? (정사각형 아님)", a: 2 }),
+            () => ({ q: "마름모의 대칭축은 몇 개?", a: 2 }),
+            () => ({ q: "점대칭 도형을 180° 돌리면 처음과 같아지는가? (같으면 1, 다르면 0)", a: 1 }),
+          ];
+          return pick(forms)();
+        }
+      },
+      {
+        id: "g5-cuboid", name: "직육면체", icon: "📦", color: "#d6ffe0",
+        generate(stage) {
+          const forms = [
+            () => ({ q: "직육면체의 면의 수는?", a: 6 }),
+            () => ({ q: "직육면체의 꼭짓점의 수는?", a: 8 }),
+            () => ({ q: "직육면체의 모서리의 수는?", a: 12 }),
+            () => ({ q: "직육면체에서 한 면과 평행한 면의 수는?", a: 1 }),
+            () => ({ q: "직육면체에서 한 꼭짓점에서 만나는 모서리의 수는?", a: 3 }),
+            () => ({ q: "정육면체에서 서로 평행한 면은 몇 쌍?", a: 3 }),
+          ];
+          return pick(forms)();
+        }
+      },
+    ]
+  },
+
+  6: {
+    name: "6학년",
+    emoji: "6",
+    color: "#0891b2",
+    desc: "비와 비율, 원, 각기둥·각뿔, 쌓기나무",
+    units: [
+      {
+        id: "g6-frac-div", name: "분수 나눗셈", icon: "➗", color: "#ffd6e7",
+        generate(stage) {
+          const d1 = rand(2, Math.min(7, 3 + stage));
+          const d2 = rand(2, Math.min(7, 3 + stage));
+          const n1 = rand(1, d1 - 1), n2 = rand(1, d2 - 1);
+          // (n1/d1) ÷ (n2/d2) = n1*d2 / (d1*n2)
+          return { q: `${n1}/${d1} ÷ ${n2}/${d2} = ? (기약분수)`, a: fracStr(n1 * d2, d1 * n2) };
+        }
+      },
+      {
+        id: "g6-dec-div", name: "소수 나눗셈", icon: "🎯", color: "#d6e7ff",
+        generate(stage) {
+          // Ensure clean answer to one decimal place
+          const b = rand(2, Math.min(9, 3 + stage));
+          const ansTimes10 = rand(11, 10 + stage * 8);
+          const a = roundDec((ansTimes10 / 10) * b, 1);
+          return { q: `${a} ÷ ${b} = ? (소수 한 자리까지)`, a: roundDec(ansTimes10 / 10, 1) };
+        }
+      },
+      {
+        id: "g6-ratio", name: "비와 비율", icon: "⚖️", color: "#ffeac6",
+        generate(stage) {
+          const forms = [
+            () => {
+              const k = rand(2, 5);
+              const a = rand(2, 5), b = rand(2, 5);
+              return { q: `${a} : ${b} = ${a*k} : ? (?를 구하세요)`, a: b * k };
+            },
+            () => {
+              const total = pick([10, 20, 25, 40, 50, 100]);
+              const part = rand(1, total - 1);
+              return { q: `전체 ${total} 중 ${part}의 비율을 %로?`, a: roundDec(part / total * 100, 1) };
+            },
+            () => {
+              const pct = pick([10, 20, 25, 40, 50, 75]);
+              const total = pick([20, 40, 80, 100]);
+              return { q: `${total}의 ${pct}%는?`, a: total * pct / 100 };
+            },
+          ];
+          return pick(forms)();
+        }
+      },
+      {
+        id: "g6-circle", name: "원의 넓이와 둘레", icon: "⭕", color: "#e3d6ff",
+        generate(stage) {
+          const PI = 3.14;
+          const forms = [
+            () => {
+              const r = rand(2, Math.min(12, 3 + stage));
+              return { q: `반지름 ${r}cm인 원의 둘레는? (π=3.14, cm)`, a: roundDec(2 * PI * r, 2) };
+            },
+            () => {
+              const r = rand(2, Math.min(12, 3 + stage));
+              return { q: `반지름 ${r}cm인 원의 넓이는? (π=3.14)`, a: roundDec(PI * r * r, 2) };
+            },
+            () => {
+              const d = rand(4, Math.min(20, 6 + stage * 2));
+              return { q: `지름 ${d}cm인 원의 둘레는? (π=3.14, cm)`, a: roundDec(PI * d, 2) };
+            },
+          ];
+          return pick(forms)();
+        }
+      },
+      {
+        id: "g6-volume", name: "직육면체 부피", icon: "📦", color: "#d6f0e7",
+        generate(stage) {
+          const forms = [
+            () => {
+              const a = rand(2, 5 + stage), b = rand(2, 5 + stage), c = rand(2, 5 + stage);
+              return { q: `가로 ${a}, 세로 ${b}, 높이 ${c}인 직육면체의 부피는?`, a: a * b * c };
+            },
+            () => {
+              const s = rand(2, 3 + stage);
+              return { q: `한 모서리가 ${s}인 정육면체의 부피는?`, a: s * s * s };
+            },
+            () => {
+              const a = rand(2, 6), b = rand(2, 6), c = rand(2, 6);
+              return { q: `가로 ${a}, 세로 ${b}, 높이 ${c}인 직육면체의 겉넓이는?`, a: 2 * (a*b + b*c + a*c) };
+            },
+          ];
+          return pick(forms)();
+        }
+      },
+      {
+        id: "g6-proportion", name: "비례식", icon: "🔗", color: "#ffe0d6",
+        generate(stage) {
+          // a : b = c : ?  where c = a*k, ? = b*k
+          const a = rand(2, 6), b = rand(2, 6);
+          const k = rand(2, Math.min(7, 2 + stage));
+          return { q: `${a} : ${b} = ${a*k} : ? 를 만족하는 수는?`, a: b * k };
+        }
+      },
+      {
+        id: "g6-prism", name: "각기둥과 각뿔", icon: "🔷", color: "#e8d6ff",
+        generate(stage) {
+          const forms = [
+            () => {
+              const n = rand(3, 6);
+              return { q: `${n}각기둥의 면의 수는? (밑면2 + 옆면n)`, a: n + 2 };
+            },
+            () => {
+              const n = rand(3, 6);
+              return { q: `${n}각기둥의 꼭짓점의 수는?`, a: 2 * n };
+            },
+            () => {
+              const n = rand(3, 6);
+              return { q: `${n}각기둥의 모서리의 수는?`, a: 3 * n };
+            },
+            () => {
+              const n = rand(3, 6);
+              return { q: `${n}각뿔의 면의 수는? (밑면1 + 옆면n)`, a: n + 1 };
+            },
+            () => {
+              const n = rand(3, 6);
+              return { q: `${n}각뿔의 꼭짓점의 수는?`, a: n + 1 };
+            },
+            () => {
+              const n = rand(3, 6);
+              return { q: `${n}각뿔의 모서리의 수는?`, a: 2 * n };
+            },
+          ];
+          return pick(forms)();
+        }
+      },
+      {
+        id: "g6-blocks", name: "쌓기나무", icon: "🧊", color: "#d6e8ff",
+        generate(stage) {
+          const forms = [
+            () => {
+              const n = rand(2, 2 + Math.min(3, Math.floor(stage/2)));
+              return { q: `한 모서리가 ${n}인 정육면체 모양을 쌓으려면 쌓기나무 몇 개?`, a: n*n*n };
+            },
+            () => {
+              const w = rand(2, Math.min(5, 2 + stage));
+              const d = rand(2, 4);
+              const h = rand(2, 4);
+              return { q: `가로 ${w}, 세로 ${d}, 높이 ${h}인 직육면체로 쌓은 쌓기나무의 개수는?`, a: w*d*h };
+            },
+            () => {
+              const base = rand(2, 5);
+              const floors = rand(2, Math.min(5, 2 + stage));
+              return { q: `한 층에 ${base}개씩 ${floors}층 쌓기. 쌓기나무는 몇 개?`, a: base * floors };
+            },
+            () => {
+              const big = rand(3, 4);
+              const small = rand(1, big - 1);
+              const total = big*big*big;
+              const removed = small*small*small;
+              return { q: `한 모서리 ${big}짜리 정육면체에서 한 모서리 ${small}짜리 작은 정육면체 한 개를 떼어내면 남은 쌓기나무 개수는?`, a: total - removed };
+            },
+          ];
+          return pick(forms)();
+        }
+      },
+      {
+        id: "g6-seq", name: "수열 심화", icon: "📈", color: "#fff0d6",
+        generate(stage) {
+          const r1 = () => {
+            const start = rand(1, 10);
+            const step = rand(2, Math.min(8, 2 + stage));
+            return { q: `${start}, ${start+step}, ${start+2*step}, ${start+3*step}, ? (같은 규칙)`, a: start + 4*step };
+          };
+          const r2 = () => {
+            const start = rand(1, 3);
+            const ratio = pick([2, 3]);
+            return { q: `${start}, ${start*ratio}, ${start*ratio*ratio}, ${start*ratio**3}, ? (같은 규칙)`, a: start * ratio**4 };
+          };
+          const r3 = () => {
+            const a1 = rand(1, 5), a2 = rand(1, 5);
+            const t3 = a1 + a2;
+            const t4 = a2 + t3;
+            const t5 = t3 + t4;
+            return { q: `${a1}, ${a2}, ${t3}, ${t4}, ? (앞 두 수의 합 규칙)`, a: t5 };
+          };
+          const r4 = () => {
+            const start = rand(2, 5);
+            return { q: `${start*start}, ${(start+1)*(start+1)}, ${(start+2)*(start+2)}, ${(start+3)*(start+3)}, ? (제곱수 규칙)`, a: (start+4)*(start+4) };
+          };
+          return pick([r1, r2, r3, r4])();
+        }
+      },
+    ]
+  },
+};
+
+// ============================================================
+// 랭크 · 뱃지 정의
+// ============================================================
+const RANKS = [
+  { id: 0, name: "새싹 수학자",   min: 0,      icon: "🌱", color: "#94a3b8" },
+  { id: 1, name: "꼬마 계산가",   min: 800,    icon: "📘", color: "#3b82f6" },
+  { id: 2, name: "중급 수학자",   min: 2500,   icon: "🎯", color: "#10b981" },
+  { id: 3, name: "수학 전문가",   min: 6000,   icon: "🏅", color: "#f59e0b" },
+  { id: 4, name: "수학 고수",     min: 15000,  icon: "🏆", color: "#8b5cf6" },
+  { id: 5, name: "수학 달인",     min: 30000,  icon: "💎", color: "#ef4444" },
+  { id: 6, name: "수학 마스터",   min: 60000,  icon: "👑", color: "#eab308" },
+  { id: 7, name: "전설의 수학자", min: 150000, icon: "🌟", color: "#ec4899" },
+];
+
+const BADGES = [
+  { id: "first_correct", name: "첫 걸음",   desc: "첫 정답",             icon: "🎯" },
+  { id: "combo_5",       name: "불타오름",  desc: "5콤보 달성",          icon: "🔥" },
+  { id: "combo_10",      name: "번개같이",  desc: "10콤보 달성",         icon: "⚡" },
+  { id: "combo_20",      name: "초신성",    desc: "20콤보 달성",         icon: "💫" },
+  { id: "perfect_1",     name: "퍼펙트",    desc: "5/5 + 하트 온전",     icon: "💯" },
+  { id: "perfect_5",     name: "퍼펙트 5",  desc: "퍼펙트 5번",          icon: "🎊" },
+  { id: "stage_5",       name: "스테이지 5", desc: "스테이지 5 도달",     icon: "🎮" },
+  { id: "stage_10",      name: "스테이지 10", desc: "스테이지 10 도달",  icon: "🔟" },
+  { id: "stars_20",      name: "별 수집가", desc: "별 20개 수집",        icon: "⭐" },
+  { id: "stars_50",      name: "별 헌터",   desc: "별 50개 수집",        icon: "✨" },
+  { id: "stars_100",     name: "별빛",      desc: "별 100개 수집",       icon: "🌠" },
+  { id: "streak_3",      name: "3일 연속",  desc: "3일 연속 학습",       icon: "📅" },
+  { id: "streak_7",      name: "주간 챔피언", desc: "7일 연속 학습",     icon: "🗓️" },
+  { id: "streak_30",     name: "한달 완주", desc: "30일 연속 학습",      icon: "🏵️" },
+  { id: "correct_100",   name: "100정답",   desc: "누적 정답 100",       icon: "💪" },
+  { id: "correct_500",   name: "500정답",   desc: "누적 정답 500",       icon: "🎖️" },
+  { id: "chest_open",    name: "보물 탐험가", desc: "보물상자 발견",     icon: "💰" },
+  { id: "all_grades",    name: "전 학년 도전", desc: "6개 학년 모두 플레이", icon: "🗺️" },
+  { id: "rank_3",        name: "수학 전문가", desc: "랭크 전문가 달성",  icon: "🏅" },
+  { id: "rank_5",        name: "마스터",    desc: "랭크 달인 이상 달성", icon: "💎" },
+  { id: "boss_1",        name: "보스 사냥꾼", desc: "첫 보스 스테이지 클리어", icon: "⚔️" },
+  { id: "boss_5",        name: "보스 정복자", desc: "보스 5번 클리어",      icon: "🛡️" },
+  { id: "boss_perfect",  name: "무결점 보스", desc: "보스 퍼펙트 (7/7 + 하트)", icon: "💀" },
+  { id: "speed_5",       name: "스피드 5",  desc: "3초 내 정답 5번",      icon: "⚡" },
+  { id: "speed_20",      name: "스피드 20", desc: "3초 내 정답 20번",     icon: "🚀" },
+  { id: "daily_1",       name: "오늘의 도전", desc: "데일리 챌린지 첫 클리어", icon: "📅" },
+  { id: "daily_7",       name: "주간 도전",  desc: "데일리 챌린지 7번 클리어", icon: "🔆" },
+];
+
+// ============================================================
+// 사운드 (Web Audio API, 외부 파일 불필요)
+// ============================================================
+let audioCtx = null;
+function ensureAudio() {
+  if (!audioCtx) {
+    try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+    catch { return null; }
+  }
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  return audioCtx;
+}
+function playTone(freq, duration = 100, type = 'sine', gain = 0.08) {
+  if (SAVE.muted) return;
+  const ctx = ensureAudio(); if (!ctx) return;
+  const osc = ctx.createOscillator();
+  const g = ctx.createGain();
+  osc.type = type;
+  osc.frequency.value = freq;
+  g.gain.setValueAtTime(gain, ctx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration/1000);
+  osc.connect(g).connect(ctx.destination);
+  osc.start();
+  osc.stop(ctx.currentTime + duration/1000);
+}
+function playCorrect() { playTone(880, 70); setTimeout(() => playTone(1320, 90), 70); }
+function playWrong()   { playTone(220, 180, 'sawtooth', 0.06); }
+function playCombo(level) {
+  const notes = [659, 784, 988, 1175, 1397];
+  for (let i = 0; i < Math.min(level, notes.length); i++) {
+    setTimeout(() => playTone(notes[i], 80, 'triangle'), i * 55);
+  }
+}
+function playRankUp() {
+  const notes = [523, 659, 784, 1047, 1319, 1568];
+  notes.forEach((n, i) => setTimeout(() => playTone(n, 180, 'triangle', 0.11), i * 120));
+}
+function playBadge() {
+  playTone(1047, 80);
+  setTimeout(() => playTone(1319, 80), 80);
+  setTimeout(() => playTone(1568, 180, 'triangle', 0.1), 160);
+}
+function playChest() {
+  playTone(659, 60);
+  setTimeout(() => playTone(831, 60), 70);
+  setTimeout(() => playTone(1047, 60), 140);
+  setTimeout(() => playTone(1568, 300, 'triangle', 0.12), 220);
+}
+
+// ============================================================
+// Progress / Save
+// ============================================================
+const SAVE_KEY = 'math_quest_v1';
+
+function todayStr() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function daysBetween(a, b) {
+  if (!a || !b) return null;
+  const da = new Date(a + 'T00:00:00');
+  const db = new Date(b + 'T00:00:00');
+  return Math.round((db - da) / (1000 * 60 * 60 * 24));
+}
+
+function loadSave() {
+  const defaults = {
+    coins: 0, units: {}, badges: [], muted: false,
+    lastPlayDate: '', streak: 0,
+    dailyChallenge: { date: '', completed: false }, // 오늘 데일리 챌린지 완료 여부
+    stats: {
+      correctCount: 0, maxCombo: 0, perfectStages: 0, totalStars: 0,
+      chestsOpened: 0, gradesPlayed: [],
+      bossDefeats: 0, bossPerfects: 0,
+      fastAnswers: 0,        // 3초 내 정답 누적
+      dailyCompletions: 0    // 데일리 챌린지 누적 클리어
+    }
+  };
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    if (!raw) return defaults;
+    const s = JSON.parse(raw);
+    return { ...defaults, ...s,
+      dailyChallenge: { ...defaults.dailyChallenge, ...(s.dailyChallenge || {}) },
+      stats: { ...defaults.stats, ...(s.stats || {}) },
+      badges: s.badges || [] };
+  } catch { return defaults; }
+}
+function saveSave(s) {
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify(s)); } catch {}
+}
+let SAVE = loadSave();
+
+function getUnitProgress(unitId) {
+  return SAVE.units[unitId] || { stage: 1, stars: 0 };
+}
+function setUnitProgress(unitId, data) {
+  SAVE.units[unitId] = { ...getUnitProgress(unitId), ...data };
+  saveSave(SAVE);
+}
+
+// ---------- 랭크 ----------
+function getCurrentRank() {
+  let current = RANKS[0];
+  for (const r of RANKS) if (SAVE.coins >= r.min) current = r; else break;
+  return current;
+}
+function getNextRank() {
+  const cur = getCurrentRank();
+  return RANKS[cur.id + 1] || null;
+}
+
+// ---------- 연속 출석 ----------
+function updateStreak() {
+  const today = todayStr();
+  if (SAVE.lastPlayDate === today) return; // 오늘 이미 체크됨
+  const diff = daysBetween(SAVE.lastPlayDate, today);
+  if (diff === 1) SAVE.streak = (SAVE.streak || 0) + 1;
+  else if (diff === null || diff > 1) SAVE.streak = 1;
+  SAVE.lastPlayDate = today;
+  saveSave(SAVE);
+  checkBadges();
+}
+
+// ---------- 뱃지 ----------
+const newBadgeQueue = [];
+function awardBadge(id) {
+  if (SAVE.badges.includes(id)) return false;
+  SAVE.badges.push(id);
+  saveSave(SAVE);
+  newBadgeQueue.push(id);
+  playBadge();
+  showBadgeToast(id);
+  return true;
+}
+function showBadgeToast(id) {
+  const badge = BADGES.find(b => b.id === id);
+  if (!badge) return;
+  const existing = document.querySelector('.badge-toast');
+  if (existing) existing.remove();
+  const toast = el('div', { class: 'badge-toast' },
+    el('span', { class: 'bt-icon' }, badge.icon),
+    el('div', { class: 'bt-text' },
+      el('span', { class: 'bt-label' }, '뱃지 획득'),
+      el('span', {}, badge.name)
+    )
+  );
+  document.body.appendChild(toast);
+  requestAnimationFrame(() => toast.classList.add('show'));
+  setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 400); }, 2500);
+}
+
+function checkBadges() {
+  const stats = SAVE.stats;
+  const triggers = [
+    ['first_correct', stats.correctCount >= 1],
+    ['combo_5',       stats.maxCombo >= 5],
+    ['combo_10',      stats.maxCombo >= 10],
+    ['combo_20',      stats.maxCombo >= 20],
+    ['perfect_1',     stats.perfectStages >= 1],
+    ['perfect_5',     stats.perfectStages >= 5],
+    ['stars_20',      stats.totalStars >= 20],
+    ['stars_50',      stats.totalStars >= 50],
+    ['stars_100',     stats.totalStars >= 100],
+    ['streak_3',      SAVE.streak >= 3],
+    ['streak_7',      SAVE.streak >= 7],
+    ['streak_30',     SAVE.streak >= 30],
+    ['correct_100',   stats.correctCount >= 100],
+    ['correct_500',   stats.correctCount >= 500],
+    ['chest_open',    stats.chestsOpened >= 1],
+    ['all_grades',    (stats.gradesPlayed || []).length >= 6],
+    ['rank_3',        getCurrentRank().id >= 3],
+    ['rank_5',        getCurrentRank().id >= 5],
+    ['boss_1',        stats.bossDefeats >= 1],
+    ['boss_5',        stats.bossDefeats >= 5],
+    ['boss_perfect',  stats.bossPerfects >= 1],
+    ['speed_5',       stats.fastAnswers >= 5],
+    ['speed_20',      stats.fastAnswers >= 20],
+    ['daily_1',       stats.dailyCompletions >= 1],
+    ['daily_7',       stats.dailyCompletions >= 7],
+  ];
+  // stage milestones
+  const maxStage = Math.max(1, ...Object.values(SAVE.units).map(u => u.stage || 1));
+  triggers.push(['stage_5', maxStage >= 5]);
+  triggers.push(['stage_10', maxStage >= 10]);
+
+  for (const [id, cond] of triggers) if (cond) awardBadge(id);
+}
+
+function recomputeTotalStars() {
+  SAVE.stats.totalStars = Object.values(SAVE.units).reduce((s, u) => s + (u.stars || 0), 0);
+}
+
+// ============================================================
+// UI Rendering
+// ============================================================
+const app = document.getElementById('app');
+let currentAnswer = ''; // for keypad input
+
+function el(tag, attrs = {}, ...children) {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (k === 'class') e.className = v;
+    else if (k === 'style') e.style.cssText = v;
+    else if (k.startsWith('on') && typeof v === 'function') e.addEventListener(k.slice(2), v);
+    else if (v !== null && v !== undefined) e.setAttribute(k, v);
+  }
+  for (const c of children) {
+    if (c == null) continue;
+    if (typeof c === 'string' || typeof c === 'number') e.appendChild(document.createTextNode(c));
+    else e.appendChild(c);
+  }
+  return e;
+}
+
+function render(node) {
+  app.innerHTML = '';
+  app.appendChild(node);
+}
+
+// ---------- Home (grade select) ----------
+function screenHome() {
+  const screen = el('div', { class: 'screen' });
+  updateStreak(); // 홈 방문 시 출석 체크
+
+  const topbar = el('div', { class: 'topbar' },
+    el('div', {},
+      el('div', { class: 'title' }, 'Math Quest'),
+      el('div', { class: 'sub' }, '초등 수학 · 스테이지 학습')
+    ),
+    el('button', {
+      class: 'mute-btn',
+      title: SAVE.muted ? '소리 켜기' : '소리 끄기',
+      onclick: (e) => { e.stopPropagation(); SAVE.muted = !SAVE.muted; saveSave(SAVE); render(screenHome()); }
+    }, SAVE.muted ? '🔇' : '🔊'),
+    el('div', { class: 'coins' }, String(SAVE.coins), ' P')
+  );
+
+  // 랭크 패널
+  const rank = getCurrentRank();
+  const next = getNextRank();
+  const rankPct = next ? Math.min(100, ((SAVE.coins - rank.min) / (next.min - rank.min)) * 100) : 100;
+  const rankPanel = el('div', { class: 'rank-panel', style: `--rank-color: ${rank.color};` },
+    el('div', { class: 'rank-row' },
+      el('div', { class: 'rank-icon-big' }, rank.icon),
+      el('div', { class: 'rank-text' },
+        el('div', { class: 'rank-label' }, '내 랭크'),
+        el('div', { class: 'rank-name' }, rank.name),
+        SAVE.streak > 0 ? el('div', { class: 'rank-streak' }, '🔥 ', String(SAVE.streak), '일 연속') : null,
+      ),
+    ),
+    el('div', { class: 'rank-bar' },
+      el('div', { class: 'rank-bar-fill', style: `width: ${rankPct}%;` })
+    ),
+    el('div', { class: 'rank-progress-text' },
+      el('span', {}, next ? `${SAVE.coins} / ${next.min} P` : '최고 랭크!'),
+      el('span', {}, next ? `${next.name}까지 ${next.min - SAVE.coins} P` : '👑'),
+    ),
+  );
+
+  // 액션 버튼 (뱃지 / 통계)
+  const unlockedBadges = SAVE.badges.length;
+  const actions = el('div', { class: 'home-actions' },
+    el('div', { class: 'action-pill', onclick: () => render(screenBadges()) },
+      el('span', { class: 'ap-label' }, '🏆 뱃지'),
+      el('span', { class: 'ap-val' }, `${unlockedBadges} / ${BADGES.length}`)
+    ),
+    el('div', { class: 'action-pill', onclick: () => render(screenStats()) },
+      el('span', { class: 'ap-label' }, '📊 기록'),
+      el('span', { class: 'ap-val' }, `정답 ${SAVE.stats.correctCount}`)
+    ),
+  );
+
+  // 데일리 챌린지 카드
+  const today = todayStr();
+  const dailyDone = SAVE.dailyChallenge.date === today && SAVE.dailyChallenge.completed;
+  const dailyCard = el('div', {
+    class: 'daily-card' + (dailyDone ? ' done' : ''),
+    onclick: () => { if (!dailyDone) startDailyChallenge(); }
+  },
+    el('div', { class: 'daily-icon' }, dailyDone ? '✅' : '🎯'),
+    el('div', { class: 'daily-text' },
+      el('div', { class: 'daily-label' }, dailyDone ? '오늘 완료!' : '오늘의 도전'),
+      el('div', { class: 'daily-desc' }, dailyDone ? '내일 다시 만나요' : '7문제 · 시간제한 25초 · 코인 2배')
+    ),
+    el('div', { class: 'daily-arrow' }, dailyDone ? '' : '▶')
+  );
+
+  const home = el('div', { class: 'home' },
+    rankPanel,
+    actions,
+    dailyCard,
+    el('div', { class: 'home-title' }, '학년 선택'),
+    el('div', { class: 'home-sub' }, '문제는 매번 새로 생성됩니다. 스테이지가 올라갈수록 난이도가 상승합니다.')
+  );
+
+  const grid = el('div', { class: 'grade-grid' });
+  for (const g of Object.keys(GRADES)) {
+    const info = GRADES[g];
+    const totalStars = info.units.reduce((s, u) => s + getUnitProgress(u.id).stars, 0);
+    const maxStars = info.units.length * 3;
+    const card = el('div', {
+      class: 'grade-card',
+      style: `--grade-accent: ${info.color};`,
+      onclick: () => render(screenUnits(+g))
+    },
+      el('div', { class: 'stars' }, `★ ${totalStars} / ${maxStars}`),
+      el('div', { class: 'emoji' }, info.emoji),
+      el('div', {},
+        el('div', { class: 'g-name' }, info.name),
+        el('div', { class: 'g-desc' }, info.desc),
+      ),
+    );
+    grid.appendChild(card);
+  }
+  home.appendChild(grid);
+  screen.append(topbar, home);
+  return screen;
+}
+
+// ---------- 뱃지 갤러리 ----------
+function screenBadges() {
+  const screen = el('div', { class: 'screen' });
+  const topbar = el('div', { class: 'topbar' },
+    el('button', { class: 'back', onclick: () => render(screenHome()) }, '←'),
+    el('div', {},
+      el('div', { class: 'title' }, '뱃지 수집'),
+      el('div', { class: 'sub' }, `${SAVE.badges.length} / ${BADGES.length} 획득`)
+    ),
+    el('div', { class: 'coins' }, String(SAVE.coins), ' P')
+  );
+  const grid = el('div', { class: 'badges-grid' });
+  for (const b of BADGES) {
+    const unlocked = SAVE.badges.includes(b.id);
+    const card = el('div', { class: 'badge-card ' + (unlocked ? 'unlocked' : 'locked') },
+      !unlocked ? el('span', { class: 'b-lock' }, '🔒') : null,
+      el('div', { class: 'b-icon' }, unlocked ? b.icon : '❓'),
+      el('div', { class: 'b-name' }, b.name),
+      el('div', { class: 'b-desc' }, b.desc),
+    );
+    grid.appendChild(card);
+  }
+  screen.append(topbar, grid);
+  return screen;
+}
+
+// ---------- 통계 화면 ----------
+function screenStats() {
+  const screen = el('div', { class: 'screen' });
+  const topbar = el('div', { class: 'topbar' },
+    el('button', { class: 'back', onclick: () => render(screenHome()) }, '←'),
+    el('div', {},
+      el('div', { class: 'title' }, '학습 기록'),
+      el('div', { class: 'sub' }, '누적 통계')
+    ),
+    el('div', { class: 'coins' }, String(SAVE.coins), ' P')
+  );
+  const maxStage = Math.max(1, ...Object.values(SAVE.units).map(u => u.stage || 1));
+  const stats = [
+    { label: '누적 정답', value: SAVE.stats.correctCount, icon: '✅' },
+    { label: '최고 콤보', value: SAVE.stats.maxCombo, icon: '🔥' },
+    { label: '총 별', value: `${SAVE.stats.totalStars} ⭐`, icon: '⭐' },
+    { label: '퍼펙트 스테이지', value: SAVE.stats.perfectStages, icon: '💯' },
+    { label: '최고 스테이지', value: maxStage, icon: '🎮' },
+    { label: '보물상자 발견', value: SAVE.stats.chestsOpened, icon: '💰' },
+    { label: '연속 출석', value: `${SAVE.streak}일`, icon: '🔥' },
+    { label: '현재 랭크', value: getCurrentRank().name, icon: getCurrentRank().icon },
+  ];
+  const body = el('div', { class: 'units' });
+  for (const s of stats) {
+    body.appendChild(el('div', { class: 'unit-card', style: `--unit-accent: #1a1a1f; --unit-icon-bg: #f4f4f7;` },
+      el('div', { class: 'unit-icon' }, s.icon),
+      el('div', { class: 'unit-body' },
+        el('div', { class: 'unit-name' }, s.label),
+        el('div', { class: 'unit-meta' },
+          el('span', { style: 'color:#1a1a1f; font-weight:800; font-size:14px; letter-spacing:-0.3px;' }, String(s.value)),
+          el('span', {}, '')
+        )
+      )
+    ));
+  }
+  screen.append(topbar, body);
+  return screen;
+}
+
+// ---------- Unit list ----------
+function screenUnits(grade) {
+  const info = GRADES[grade];
+  const screen = el('div', { class: 'screen' });
+  const topbar = el('div', { class: 'topbar' },
+    el('button', { class: 'back', onclick: () => render(screenHome()) }, '←'),
+    el('div', {},
+      el('div', { class: 'title' }, info.name),
+      el('div', { class: 'sub' }, '단원을 고르세요')
+    ),
+    el('div', { class: 'coins' }, String(SAVE.coins), ' P')
+  );
+
+  const units = el('div', { class: 'units' });
+  info.units.forEach((u, idx) => {
+    const p = getUnitProgress(u.id);
+    const maxStageShown = 10; // 표시 상한 (실제로는 무한 반복)
+    const pct = Math.min(100, ((p.stage - 1) / maxStageShown) * 100);
+    const starStr = '★'.repeat(p.stars) + '☆'.repeat(3 - p.stars);
+    const card = el('div', {
+      class: 'unit-card',
+      style: `--unit-accent: ${info.color}; --unit-icon-bg: ${info.color}1a;`,
+      onclick: () => startStage(grade, u.id)
+    },
+      el('div', { class: 'unit-icon' }, u.icon),
+      el('div', { class: 'unit-body' },
+        el('div', { class: 'unit-name' }, u.name),
+        el('div', { class: 'unit-progress-bar' },
+          el('div', { class: 'unit-progress-fill', style: `width: ${pct}%;` })
+        ),
+        el('div', { class: 'unit-meta' },
+          el('span', {}, `STAGE ${p.stage}`),
+          el('span', { class: 'unit-stars' }, starStr)
+        )
+      )
+    );
+    units.appendChild(card);
+  });
+
+  screen.append(topbar, units);
+  return screen;
+}
+
+// ---------- Play (quiz) ----------
+// 데일리 챌린지 시작 — 무작위 학년/단원에서 7문제 출제
+function startDailyChallenge() {
+  const today = todayStr();
+  if (SAVE.dailyChallenge.date === today && SAVE.dailyChallenge.completed) {
+    alert('오늘의 도전은 이미 완료했어요! 내일 다시 만나요 🎯');
+    return;
+  }
+  // 매일 시드 고정: 같은 날에는 같은 단원이 출제됨
+  const seed = parseInt(today.replace(/-/g,''), 10);
+  const allGrades = Object.keys(GRADES).map(Number);
+  const grade = allGrades[seed % allGrades.length];
+  const units = GRADES[grade].units;
+  const unit = units[(seed * 7) % units.length];
+  // 도전적 stage (3~6)
+  const stage = 3 + (seed % 4);
+  // 데일리는 unit.stage 진행도와 무관하게 진행
+  startStage(grade, unit.id, { isDaily: true, stage });
+}
+
+function startStage(grade, unitId, opts = {}) {
+  const info = GRADES[grade];
+  const unit = info.units.find(u => u.id === unitId);
+  const prog = getUnitProgress(unitId);
+  const stage = opts.stage || prog.stage;
+
+  // 보스 스테이지: stage가 5의 배수
+  const isBoss = !opts.isDaily && stage % 5 === 0;
+  const numProblems = isBoss ? 7 : 5;
+  // 보스 스테이지는 더 어려운 단계의 문제 사용
+  const generateStage = isBoss ? Math.max(stage, stage + 2) : stage;
+
+  // 시간제한: 일반 stage 7+ → 30초, 13+ → 20초, 보스 → 25초
+  let timeLimit = null;
+  if (isBoss) timeLimit = 25;
+  else if (stage >= 13) timeLimit = 20;
+  else if (stage >= 7) timeLimit = 30;
+
+  // 데일리 챌린지: 7문제, 시간제한 25초, 어려운 stage로 출제
+  if (opts.isDaily) {
+    timeLimit = 25;
+  }
+
+  const problems = [];
+  const seen = new Set();
+  let guard = 0;
+  const targetCount = opts.isDaily ? 7 : numProblems;
+  while (problems.length < targetCount && guard++ < 300) {
+    const p = unit.generate(generateStage);
+    if (!p || p.a === undefined || p.a === null) continue;
+    if (seen.has(p.q)) continue;
+    seen.add(p.q);
+    problems.push(p);
+  }
+
+  const state = {
+    grade, unit, stage,
+    problems,
+    idx: 0,
+    hearts: 3,
+    combo: 0,
+    coinsEarned: 0,
+    results: [],
+    isBoss,
+    isDaily: !!opts.isDaily,
+    timeLimit,
+    questionStartTime: 0,
+  };
+  render(screenPlay(state));
+}
+
+function screenPlay(state) {
+  currentAnswer = '';
+  // 타이머 정리
+  if (window.__playTimerId) { clearTimeout(window.__playTimerId); window.__playTimerId = null; }
+
+  const screen = el('div', { class: 'screen' });
+  const info = GRADES[state.grade];
+
+  // 보스/데일리 라벨
+  let stageLabel = `스테이지 ${state.stage}`;
+  if (state.isBoss) stageLabel = `⚔️ 보스 스테이지 ${state.stage}`;
+  if (state.isDaily) stageLabel = `🎯 오늘의 도전`;
+
+  const topbar = el('div', { class: 'topbar' },
+    el('button', { class: 'back', onclick: () => {
+      if (confirm('스테이지를 그만두고 단원으로 돌아갈까요?')) {
+        if (window.__playTimerId) { clearTimeout(window.__playTimerId); window.__playTimerId = null; }
+        render(state.isDaily ? screenHome() : screenUnits(state.grade));
+      }
+    }}, '←'),
+    el('div', {},
+      el('div', { class: 'title' }, `${state.unit.icon} ${state.unit.name}`),
+      el('div', { class: 'sub' }, stageLabel)
+    ),
+    el('div', { class: 'coins' }, String(SAVE.coins + state.coinsEarned), ' P')
+  );
+
+  const play = el('div', { class: 'play' });
+
+  // 보스 배너
+  if (state.isBoss) {
+    play.appendChild(el('div', { class: 'boss-banner' }, '⚔️ 보스 스테이지 ⚔️'));
+  } else if (state.isDaily) {
+    play.appendChild(el('div', { class: 'boss-banner daily' }, '🎯 오늘의 도전'));
+  }
+
+  const hud = el('div', { class: 'hud' });
+  const hearts = el('div', { class: 'hearts' });
+  for (let i = 0; i < 3; i++) {
+    hearts.appendChild(el('span', { class: i < state.hearts ? '' : 'lost' }, '❤️'));
+  }
+  const combo = el('div', { class: 'combo-badge' + (state.combo >= 2 ? ' show' : ''), id: 'combo' },
+    `🔥 ${state.combo} 콤보`);
+  hud.append(hearts, combo);
+  play.appendChild(hud);
+
+  const dots = el('div', { class: 'progress-dots' });
+  for (let i = 0; i < state.problems.length; i++) {
+    let cls = 'dot';
+    if (state.results[i] === true) cls += ' done';
+    else if (state.results[i] === false) cls += ' wrong';
+    dots.appendChild(el('div', { class: cls }));
+  }
+  play.appendChild(dots);
+
+  // 타이머 바
+  if (state.timeLimit) {
+    const timerBar = el('div', { class: 'timer-bar' },
+      el('div', {
+        class: 'timer-fill',
+        id: 'timerFill',
+        style: `animation: countdown ${state.timeLimit}s linear forwards;`
+      })
+    );
+    play.appendChild(timerBar);
+  }
+
+  const current = state.problems[state.idx];
+  // 문제 시작 시각 기록 (스피드 보너스용)
+  state.questionStartTime = Date.now();
+
+  // 시간초과 자동 오답 처리
+  if (state.timeLimit) {
+    window.__playTimerId = setTimeout(() => {
+      if (state.results[state.idx] === undefined) {
+        currentAnswer = ''; // 빈 답으로 제출
+        submitAnswer(state, true); // timeout=true
+      }
+    }, state.timeLimit * 1000);
+  }
+
+  const problemArea = el('div', { class: 'problem-area' + (state.hearts === 1 ? ' danger' : '') + (state.isBoss ? ' boss' : ''), id: 'problemArea' },
+    el('div', { class: 'q-stage' }, `문제 ${state.idx + 1} / ${state.problems.length}`),
+    el('div', { class: 'q-text' + (current.q.length > 22 ? ' small' : '') }, current.q),
+    el('div', { class: 'answer-box', id: 'ansBox' }, '?'),
+    el('div', { class: 'feedback', id: 'feedback' })
+  );
+  play.appendChild(problemArea);
+
+  const keypad = el('div', { class: 'keypad' });
+  const keys = ['1','2','3','4','5','6','7','8','9','.','0','/'];
+  keys.forEach(k => {
+    const btn = el('button', { class: 'key' + (k === '.' || k === '/' ? ' secondary' : ''),
+      onclick: () => pressKey(k, state) }, k);
+    keypad.appendChild(btn);
+  });
+  keypad.appendChild(el('button', { class: 'key secondary', onclick: () => pressKey('DEL', state) }, '지우기'));
+  keypad.appendChild(el('button', { class: 'key', onclick: () => pressKey('SIGN', state) }, '±'));
+  keypad.appendChild(el('button', { class: 'key action', onclick: () => submitAnswer(state) }, '확인'));
+  play.appendChild(keypad);
+
+  screen.append(topbar, play);
+  return screen;
+}
+
+function pressKey(k, state) {
+  const box = document.getElementById('ansBox');
+  if (!box) return;
+  if (k === 'DEL') {
+    currentAnswer = currentAnswer.slice(0, -1);
+  } else if (k === 'SIGN') {
+    if (currentAnswer.startsWith('-')) currentAnswer = currentAnswer.slice(1);
+    else currentAnswer = '-' + currentAnswer;
+  } else {
+    if (currentAnswer.length >= 10) return;
+    if (k === '.' && currentAnswer.includes('.')) return;
+    if (k === '/' && currentAnswer.includes('/')) return;
+    currentAnswer += k;
+  }
+  box.textContent = currentAnswer === '' ? '?' : currentAnswer;
+  box.classList.remove('correct', 'wrong');
+}
+
+function submitAnswer(state, isTimeout = false) {
+  if (!isTimeout && (currentAnswer === '' || currentAnswer === '-')) return;
+  // 타이머 정리
+  if (window.__playTimerId) { clearTimeout(window.__playTimerId); window.__playTimerId = null; }
+
+  const problem = state.problems[state.idx];
+  const isCorrect = !isTimeout && checkAnswer(currentAnswer, problem.a);
+  const box = document.getElementById('ansBox');
+  const feedback = document.getElementById('feedback');
+  const area = document.getElementById('problemArea');
+
+  // 응답 시간 측정 (스피드 보너스)
+  const elapsedMs = Date.now() - (state.questionStartTime || Date.now());
+  const elapsedSec = elapsedMs / 1000;
+
+  if (isCorrect) {
+    box.classList.add('correct');
+    // 스피드 보너스 계산
+    let speedMul = 1.0;
+    let speedLabel = '';
+    if (elapsedSec < 3) { speedMul = 1.5; speedLabel = ' ⚡ 1.5x'; SAVE.stats.fastAnswers++; }
+    else if (elapsedSec < 6) { speedMul = 1.2; speedLabel = ' 🏃 1.2x'; }
+    feedback.textContent = '✅ 정답!' + speedLabel;
+    feedback.className = 'feedback correct show';
+    area.classList.add('pop');
+    state.results[state.idx] = true;
+    state.combo++;
+    // 통계
+    SAVE.stats.correctCount++;
+    if (state.combo > SAVE.stats.maxCombo) SAVE.stats.maxCombo = state.combo;
+    saveSave(SAVE);
+    // 사운드
+    if (state.combo >= 5 && state.combo % 5 === 0) playCombo(Math.min(5, Math.ceil(state.combo / 5)));
+    else if (state.combo >= 3) { playCorrect(); setTimeout(() => playTone(1760, 60), 140); }
+    else playCorrect();
+    // 코인: 기본 10 + stage*2, 콤보 보너스 + 스피드 보너스 + 보스 보너스
+    const comboMul = state.combo >= 5 ? 3 : state.combo >= 3 ? 2 : 1;
+    const bossMul = state.isBoss || state.isDaily ? 2 : 1;
+    const earned = Math.round((10 + state.stage * 2) * comboMul * speedMul * bossMul);
+    state.coinsEarned += earned;
+    checkBadges();
+  } else {
+    box.classList.add('wrong');
+    feedback.textContent = isTimeout ? `⏰ 시간초과! 정답: ${problem.a}` : `❌ 정답: ${problem.a}`;
+    feedback.className = 'feedback wrong show';
+    area.classList.add('shake');
+    state.results[state.idx] = false;
+    state.combo = 0;
+    state.hearts--;
+    playWrong();
+  }
+
+  setTimeout(() => {
+    area.classList.remove('shake', 'pop');
+    feedback.classList.remove('show');
+    state.idx++;
+    if (state.hearts <= 0) {
+      render(screenResult(state, false));
+    } else if (state.idx >= state.problems.length) {
+      render(screenResult(state, true));
+    } else {
+      render(screenPlay(state));
+    }
+  }, isCorrect ? 900 : 1500);
+}
+
+// ---------- Result ----------
+function screenResult(state, completed) {
+  const correctCount = state.results.filter(r => r === true).length;
+  const total = state.problems.length;
+  // 통과 기준: 일반 5문제 중 3, 보스/데일리 7문제 중 5
+  const passThreshold = (state.isBoss || state.isDaily) ? 5 : 3;
+  const passed = completed && correctCount >= passThreshold;
+  let stars = 0;
+  if (passed) {
+    const fullCorrect = total; // 5 or 7
+    if (correctCount === fullCorrect && state.hearts === 3) stars = 3;
+    else if (correctCount >= fullCorrect - 1) stars = 2;
+    else stars = 1;
+  }
+  const isPerfect = passed && correctCount === total && state.hearts === 3;
+
+  // 이전 랭크를 기억해뒀다가 랭크업 감지
+  const prevRank = getCurrentRank();
+
+  // Save progress
+  if (passed) {
+    SAVE.coins += state.coinsEarned;
+    if (state.isDaily) {
+      // 데일리 챌린지 클리어
+      SAVE.dailyChallenge.completed = true;
+      SAVE.dailyChallenge.date = todayStr();
+      SAVE.stats.dailyCompletions = (SAVE.stats.dailyCompletions || 0) + 1;
+    } else {
+      // 일반/보스: 단원 진행도 갱신
+      const prev = getUnitProgress(state.unit.id);
+      const newStars = Math.max(prev.stars, stars);
+      const newStage = Math.max(prev.stage, state.stage + 1);
+      setUnitProgress(state.unit.id, { stage: newStage, stars: newStars });
+    }
+    // 보스 카운터
+    if (state.isBoss) {
+      SAVE.stats.bossDefeats = (SAVE.stats.bossDefeats || 0) + 1;
+      if (isPerfect) SAVE.stats.bossPerfects = (SAVE.stats.bossPerfects || 0) + 1;
+    }
+    if (isPerfect) SAVE.stats.perfectStages = (SAVE.stats.perfectStages || 0) + 1;
+    if (!SAVE.stats.gradesPlayed.includes(state.grade)) SAVE.stats.gradesPlayed.push(state.grade);
+    recomputeTotalStars();
+    saveSave(SAVE);
+    checkBadges();
+  }
+  const newRank = getCurrentRank();
+  const rankedUp = passed && newRank.id > prevRank.id;
+
+  // 보물상자: 별 수, 퍼펙트, 스테이지에 따라 확률 상승
+  const chestChance = 0.1 + (stars - 1) * 0.1 + (isPerfect ? 0.15 : 0);
+  const hasChest = passed && Math.random() < chestChance;
+  const chestBonus = Math.round((30 + state.stage * 10 + Math.random() * 50) / 10) * 10;
+
+  const screen = el('div', { class: 'screen' });
+  const topbar = el('div', { class: 'topbar' },
+    el('button', { class: 'back', onclick: () => render(screenUnits(state.grade)) }, '←'),
+    el('div', {},
+      el('div', { class: 'title' }, passed ? '스테이지 클리어' : '다시 도전'),
+      el('div', { class: 'sub' }, `${state.unit.name} · 스테이지 ${state.stage}`)
+    ),
+    el('div', { class: 'coins' }, String(SAVE.coins), ' P')
+  );
+
+  const result = el('div', { class: 'result' });
+
+  // 퍼펙트 배너
+  if (isPerfect) {
+    result.appendChild(el('div', { class: 'perfect-banner' }, 'PERFECT'));
+  }
+
+  const emoji = passed
+    ? (stars === 3 ? '🏆' : stars === 2 ? '🥇' : '🎯')
+    : (state.hearts <= 0 ? '💔' : '📚');
+  result.appendChild(el('div', { class: 'big-emoji' }, emoji));
+  result.appendChild(el('h2', {}, passed ? '잘했어!' : '괜찮아, 한 번 더!'));
+  result.appendChild(el('div', { class: 'stage-cleared' },
+    `정답 ${correctCount} / ${total} · 하트 ${Math.max(0,state.hearts)} 남음`));
+
+  const starsEl = el('div', { class: 'stars-big' });
+  for (let i = 0; i < 3; i++) {
+    starsEl.appendChild(el('span', { class: i < stars ? 'star' : 'star empty' }, '★'));
+  }
+  result.appendChild(starsEl);
+
+  if (passed) {
+    result.appendChild(el('div', { class: 'reward' }, `💰 코인 +${state.coinsEarned}P 획득!`));
+
+    // 보물상자 (상자 클릭 시 보너스)
+    if (hasChest) {
+      const chestEl = el('div', { class: 'chest' }, '🎁');
+      const hintEl = el('div', { class: 'chest-hint' }, '클릭해서 보물 확인!');
+      chestEl.onclick = () => {
+        if (chestEl.classList.contains('opened')) return;
+        chestEl.classList.add('opened');
+        chestEl.textContent = '💰';
+        SAVE.coins += chestBonus;
+        SAVE.stats.chestsOpened = (SAVE.stats.chestsOpened || 0) + 1;
+        saveSave(SAVE);
+        playChest();
+        hintEl.textContent = `✨ +${chestBonus}P 획득!`;
+        hintEl.style.color = '#a16207';
+        hintEl.style.fontSize = '13px';
+        checkBadges();
+      };
+      result.appendChild(chestEl);
+      result.appendChild(hintEl);
+    }
+
+    result.appendChild(el('button', { class: 'btn primary',
+      onclick: async () => {
+        await maybeShowInterstitial();
+        startStage(state.grade, state.unit.id);
+      }},
+      `다음 스테이지 ${state.stage + 1} ▶`));
+  } else {
+    result.appendChild(el('button', { class: 'btn primary',
+      onclick: () => startStage(state.grade, state.unit.id) },
+      `🔄 스테이지 ${state.stage} 다시 하기`));
+  }
+  result.appendChild(el('button', { class: 'btn ghost',
+    onclick: () => render(screenUnits(state.grade)) },
+    '단원 목록으로'));
+
+  screen.append(topbar, result);
+
+  // 랭크업 모달
+  if (rankedUp) {
+    setTimeout(() => showRankUpModal(newRank), 500);
+  }
+
+  // Confetti on 3-star clear
+  if (passed && stars === 3) {
+    setTimeout(() => {
+      const colors = ['#ff6b6b','#ffd93d','#6bcf7f','#4d96ff','#c084fc','#ff9eee'];
+      for (let i = 0; i < 30; i++) {
+        const c = document.createElement('div');
+        c.className = 'confetti';
+        c.style.left = Math.random() * 100 + '%';
+        c.style.background = colors[i % colors.length];
+        c.style.animationDelay = (Math.random() * 0.3) + 's';
+        c.style.animationDuration = (1 + Math.random()) + 's';
+        screen.appendChild(c);
+        setTimeout(() => c.remove(), 2500);
+      }
+    }, 100);
+  }
+
+  return screen;
+}
+
+// ============================================================
+// 랭크업 모달
+// ============================================================
+function showRankUpModal(rank) {
+  playRankUp();
+  const overlay = el('div', { class: 'modal-overlay' });
+  const modal = el('div', { class: 'rank-up-modal', style: `--rank-color: ${rank.color};` },
+    el('div', { class: 'label' }, 'RANK UP'),
+    el('div', { class: 'big-icon' }, rank.icon),
+    el('div', { class: 'rank-title' }, rank.name),
+    el('div', { class: 'rank-sub' }, '새로운 랭크로 성장했어요!'),
+    el('button', { class: 'close-btn', onclick: () => overlay.remove() }, '계속하기'),
+  );
+  overlay.appendChild(modal);
+  document.body.appendChild(overlay);
+  // 대량 컨페티
+  const colors = ['#ff6b6b','#ffd93d','#6bcf7f','#4d96ff','#c084fc','#ff9eee','#f5a623'];
+  for (let i = 0; i < 60; i++) {
+    const c = document.createElement('div');
+    c.className = 'confetti';
+    c.style.left = Math.random() * 100 + '%';
+    c.style.background = colors[i % colors.length];
+    c.style.animationDelay = (Math.random() * 0.5) + 's';
+    c.style.animationDuration = (1 + Math.random() * 1.5) + 's';
+    c.style.zIndex = '101';
+    overlay.appendChild(c);
+    setTimeout(() => c.remove(), 3000);
+  }
+}
+
+// ============================================================
+// AdMob 광고 연동
+// - ADS_ENABLED = true 로 바꾸면 광고 다시 켜짐
+// - 웹 브라우저에서는 어차피 동작 안 함 (조기 return)
+// - 배포 전에 AD_INTERSTITIAL_ID를 실제 AdMob ID로, AD_TESTING을 false로
+// ============================================================
+const ADS_ENABLED = false; // ★ 광고 마스터 스위치 (현재 OFF)
+const AD_INTERSTITIAL_ID = 'ca-app-pub-3940256099942544/1033173712';
+const AD_TESTING = true;
+const AD_SHOW_EVERY_N_CLEARS = 1;
+let adStageClearCount = 0;
+
+function isNativeApp() {
+  return !!(window.Capacitor?.isNativePlatform && window.Capacitor.isNativePlatform());
+}
+function getAdMob() {
+  return window.Capacitor?.Plugins?.AdMob;
+}
+
+async function initAds() {
+  if (!ADS_ENABLED || !isNativeApp()) return;
+  const AdMob = getAdMob();
+  if (!AdMob) return;
+  try {
+    await AdMob.initialize({ initializeForTesting: AD_TESTING });
+    await prepareInterstitial();
+  } catch (e) { console.warn('[Ads] init failed', e); }
+}
+
+async function prepareInterstitial() {
+  if (!ADS_ENABLED || !isNativeApp()) return;
+  const AdMob = getAdMob();
+  if (!AdMob) return;
+  try {
+    await AdMob.prepareInterstitial({ adId: AD_INTERSTITIAL_ID, isTesting: AD_TESTING });
+  } catch (e) { console.warn('[Ads] prepare failed', e); }
+}
+
+async function maybeShowInterstitial() {
+  if (!ADS_ENABLED) return;
+  adStageClearCount++;
+  if (adStageClearCount % AD_SHOW_EVERY_N_CLEARS !== 0) return;
+  if (!isNativeApp()) return;
+  const AdMob = getAdMob();
+  if (!AdMob) return;
+  try {
+    await AdMob.showInterstitial();
+    await prepareInterstitial();
+  } catch (e) { console.warn('[Ads] show failed', e); }
+}
+
+// ---------- Boot ----------
+initAds();
+render(screenHome());
+</script>
+</body>
+</html>

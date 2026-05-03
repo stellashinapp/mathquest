@@ -1,0 +1,38 @@
+# 의존성
+node_modules/
+
+# Capacitor / Android 빌드 산출물
+android/build/
+android/app/build/
+android/.gradle/
+android/app/.cxx/
+android/local.properties
+android/captures/
+android/.idea/
+android/.kotlin/
+android/app/.kotlin/
+android/.cxx/
+
+# 빌드된 APK (필요 시 따로 보관)
+*.apk
+*.aab
+
+# ⚠️ 서명 키스토어는 절대 커밋하지 말 것 (Play Store 영구 키)
+android/app/*.keystore
+android/app/*.jks
+*.keystore.properties
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# 로그
+*.log
+npm-debug.log*
+
+# 임시 / 테스트
+.playwright-mcp/
+*.tmp
+_gen_only.mjs

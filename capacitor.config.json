@@ -1,0 +1,12 @@
+{
+  "appId": "com.mathquest.app",
+  "appName": "Math Quest",
+  "webDir": "www",
+  "android": {
+    "backgroundColor": "#ffffff",
+    "allowMixedContent": false
+  },
+  "server": {
+    "androidScheme": "https"
+  }
+}
