@@ -809,6 +809,142 @@
     color: var(--gold-dark);
   }
 
+  /* ============================================
+     타이포 & 정보 위계 폴리시
+     ============================================ */
+  /* 모든 숫자는 표 형식 (자릿수 안 흔들림) */
+  .topbar .coins, .rank-progress-text, .unit-meta, .stars,
+  .ap-val, .answer-box, .q-text, .key, .badge-card .b-name {
+    font-variant-numeric: tabular-nums lining-nums;
+  }
+  .topbar .coins { font-feature-settings: "tnum"; letter-spacing: 0.3px; }
+  .coin-suffix {
+    font-size: 0.72em; font-weight: 700;
+    color: var(--gold); margin-left: 3px;
+    letter-spacing: 1px; opacity: 0.85;
+  }
+
+  /* === 학년 카드 정보 추가 === */
+  .grade-card .g-units {
+    font-family: var(--serif);
+    font-size: 9.5px; color: var(--ink-light); font-weight: 700;
+    letter-spacing: 1.5px; text-transform: uppercase;
+    margin-top: 8px; padding: 3px 10px;
+    background: rgba(184, 115, 51, 0.12);
+    border: 1px solid rgba(184, 115, 51, 0.3);
+    border-radius: 8px;
+  }
+
+  /* === 단원 카드 위계 === */
+  .unit-name-row {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 8px; margin-bottom: 7px;
+  }
+  .unit-tags { display: flex; gap: 4px; flex-shrink: 0; }
+  .unit-tag {
+    display: inline-flex; align-items: center;
+    font-family: var(--serif);
+    font-size: 9px; font-weight: 800;
+    padding: 2px 7px; border-radius: 6px;
+    letter-spacing: 0.5px; white-space: nowrap;
+  }
+  .unit-tag.boss {
+    background: linear-gradient(180deg, var(--crimson) 0%, #6a1818 100%);
+    color: var(--gold-bright); border: 1px solid var(--gold-dark);
+    box-shadow: 0 1px 3px rgba(160,37,37,0.4);
+  }
+  .unit-tag.timer {
+    background: linear-gradient(180deg, var(--royal-light) 0%, var(--royal) 100%);
+    color: #fff; border: 1px solid #3d2860;
+  }
+  .unit-tag.perfect {
+    background: linear-gradient(180deg, var(--gold) 0%, var(--copper) 100%);
+    color: var(--ink); border: 1px solid var(--gold-dark);
+  }
+  .unit-stage-label { display: flex; align-items: baseline; gap: 6px; }
+  .meta-label {
+    font-family: var(--serif);
+    font-size: 9px; font-weight: 700;
+    color: var(--gold-dark);
+    letter-spacing: 1.5px; text-transform: uppercase;
+    opacity: 0.85;
+  }
+  .meta-value {
+    font-family: var(--serif);
+    font-size: 12px; font-weight: 900;
+    color: var(--ink); letter-spacing: 0.5px;
+  }
+
+  /* === 수학 문제 분수 / 연산자 === */
+  .frac {
+    display: inline-flex; flex-direction: column;
+    vertical-align: middle; margin: 0 2px;
+    font-size: 0.78em; line-height: 1;
+  }
+  .frac-num, .frac-den {
+    padding: 0 6px; text-align: center;
+    font-family: var(--serif); font-weight: 900;
+  }
+  .frac-num { border-bottom: 2px solid currentColor; padding-bottom: 2px; }
+  .frac-den { padding-top: 2px; }
+  .op {
+    color: var(--copper); font-weight: 900;
+    margin: 0 2px;
+    text-shadow: 0 1px 0 rgba(255,255,255,0.4);
+  }
+  .op-eq { color: var(--gold-dark); font-weight: 900; margin: 0 4px; }
+  .qmark {
+    color: var(--royal); font-weight: 900;
+    text-shadow: 0 0 8px rgba(91, 61, 138, 0.3);
+  }
+
+  /* === 별 캐스케이드 (한 개씩 등장) === */
+  .result .stars-big .star {
+    display: inline-block;
+    opacity: 0;
+    transform: scale(0.3) rotate(-180deg);
+    animation: starPop 0.6s cubic-bezier(0.2, 1.5, 0.5, 1) forwards;
+  }
+  .result .stars-big .star:nth-child(1) { animation-delay: 0.3s; }
+  .result .stars-big .star:nth-child(2) { animation-delay: 0.6s; }
+  .result .stars-big .star:nth-child(3) { animation-delay: 0.9s; }
+  @keyframes starPop {
+    0%   { opacity: 0; transform: scale(0.3) rotate(-180deg); }
+    60%  { transform: scale(1.3) rotate(15deg); }
+    100% { opacity: 1; transform: scale(1) rotate(0deg); }
+  }
+
+  /* === 답 입력 박스 부드러운 글로우 === */
+  .answer-box:not(.correct):not(.wrong) {
+    animation: ansBoxPulse 1.6s ease-in-out infinite;
+  }
+  @keyframes ansBoxPulse {
+    0%, 100% { box-shadow: inset 0 2px 4px rgba(184, 115, 51, 0.2), 0 2px 6px rgba(0,0,0,0.2); }
+    50% { box-shadow: inset 0 2px 4px rgba(184, 115, 51, 0.2), 0 2px 6px rgba(0,0,0,0.2), 0 0 12px rgba(212, 168, 92, 0.4); }
+  }
+
+  /* === 콤보 펄스 === */
+  .combo-badge.show { animation: comboBeat 0.8s ease-in-out infinite alternate; }
+  @keyframes comboBeat {
+    from { transform: scale(1); }
+    to { transform: scale(1.06); }
+  }
+
+  /* === 한국어 줄바꿈 자연스럽게 === */
+  .home-sub, .daily-desc, .rank-progress-text,
+  .stage-cleared, .b-desc {
+    word-break: keep-all; line-height: 1.4;
+  }
+
+  /* === 학년 카드 왕관 장식 === */
+  .grade-card .crown {
+    position: absolute; top: -6px; left: 50%;
+    transform: translateX(-50%);
+    font-size: 24px;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+    z-index: 3;
+  }
+
 </style>
 </head>
 <body>
@@ -2156,6 +2292,7 @@ function el(tag, attrs = {}, ...children) {
   const e = document.createElement(tag);
   for (const [k, v] of Object.entries(attrs)) {
     if (k === 'class') e.className = v;
+    else if (k === 'html') e.innerHTML = v;
     else if (k === 'style') e.style.cssText = v;
     else if (k.startsWith('on') && typeof v === 'function') e.addEventListener(k.slice(2), v);
     else if (v !== null && v !== undefined) e.setAttribute(k, v);
@@ -2166,6 +2303,22 @@ function el(tag, attrs = {}, ...children) {
     else e.appendChild(c);
   }
   return e;
+}
+
+// 수학 텍스트를 예쁘게: 분수 스택, 연산자 색상화
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
+}
+function formatMath(text) {
+  let html = escapeHtml(text);
+  // 분수 a/b → 분자/분모 스택
+  html = html.replace(/(?<![\d.])(-?\d+)\/(\d+)(?![\d.])/g,
+    '<span class="frac"><span class="frac-num">$1</span><span class="frac-den">$2</span></span>');
+  // 연산자 ± × ÷
+  html = html.replace(/ ([+\-×÷]) /g, ' <span class="op">$1</span> ');
+  // = ? 패턴
+  html = html.replace(/=\s*\?/g, '<span class="op-eq">=</span> <span class="qmark">?</span>');
+  return html;
 }
 
 function render(node) {
@@ -2188,7 +2341,7 @@ function screenHome() {
       title: SAVE.muted ? '소리 켜기' : '소리 끄기',
       onclick: (e) => { e.stopPropagation(); SAVE.muted = !SAVE.muted; saveSave(SAVE); render(screenHome()); }
     }, SAVE.muted ? '🔇' : '🔊'),
-    el('div', { class: 'coins' }, String(SAVE.coins), ' P')
+    el('div', { class: 'coins', html: String(SAVE.coins) + '<span class="coin-suffix">P</span>' })
   );
 
   // 랭크 패널
@@ -2254,17 +2407,21 @@ function screenHome() {
     const info = GRADES[g];
     const totalStars = info.units.reduce((s, u) => s + getUnitProgress(u.id).stars, 0);
     const maxStars = info.units.length * 3;
+    const completedUnits = info.units.filter(u => getUnitProgress(u.id).stars >= 1).length;
+    const isFullyMastered = totalStars === maxStars && maxStars > 0;
     const card = el('div', {
-      class: 'grade-card',
+      class: 'grade-card' + (isFullyMastered ? ' mastered' : ''),
       style: `--grade-accent: ${info.color};`,
       onclick: () => render(screenUnits(+g))
     },
+      isFullyMastered ? el('div', { class: 'crown' }, '👑') : null,
       el('div', { class: 'stars' }, `★ ${totalStars} / ${maxStars}`),
       el('div', { class: 'emoji' }, info.emoji),
-      el('div', {},
+      el('div', { class: 'g-text' },
         el('div', { class: 'g-name' }, info.name),
         el('div', { class: 'g-desc' }, info.desc),
       ),
+      el('div', { class: 'g-units' }, `${completedUnits} / ${info.units.length} 단원`)
     );
     grid.appendChild(card);
   }
@@ -2282,7 +2439,7 @@ function screenBadges() {
       el('div', { class: 'title' }, '뱃지 수집'),
       el('div', { class: 'sub' }, `${SAVE.badges.length} / ${BADGES.length} 획득`)
     ),
-    el('div', { class: 'coins' }, String(SAVE.coins), ' P')
+    el('div', { class: 'coins', html: String(SAVE.coins) + '<span class="coin-suffix">P</span>' })
   );
   const grid = el('div', { class: 'badges-grid' });
   for (const b of BADGES) {
@@ -2308,7 +2465,7 @@ function screenStats() {
       el('div', { class: 'title' }, '학습 기록'),
       el('div', { class: 'sub' }, '누적 통계')
     ),
-    el('div', { class: 'coins' }, String(SAVE.coins), ' P')
+    el('div', { class: 'coins', html: String(SAVE.coins) + '<span class="coin-suffix">P</span>' })
   );
   const maxStage = Math.max(1, ...Object.values(SAVE.units).map(u => u.stage || 1));
   const stats = [
@@ -2348,15 +2505,23 @@ function screenUnits(grade) {
       el('div', { class: 'title' }, info.name),
       el('div', { class: 'sub' }, '단원을 고르세요')
     ),
-    el('div', { class: 'coins' }, String(SAVE.coins), ' P')
+    el('div', { class: 'coins', html: String(SAVE.coins) + '<span class="coin-suffix">P</span>' })
   );
 
   const units = el('div', { class: 'units' });
   info.units.forEach((u, idx) => {
     const p = getUnitProgress(u.id);
-    const maxStageShown = 10; // 표시 상한 (실제로는 무한 반복)
+    const maxStageShown = 10;
     const pct = Math.min(100, ((p.stage - 1) / maxStageShown) * 100);
     const starStr = '★'.repeat(p.stars) + '☆'.repeat(3 - p.stars);
+    // 다음 스테이지가 보스(5의 배수)인지, 타이머가 있는지 확인
+    const nextIsBoss = p.stage % 5 === 0;
+    const nextHasTimer = p.stage >= 7;
+    const tags = [];
+    if (nextIsBoss) tags.push(el('span', { class: 'unit-tag boss' }, '⚔️ 보스'));
+    else if (nextHasTimer) tags.push(el('span', { class: 'unit-tag timer' }, '⏰ 타이머'));
+    if (p.stars === 3 && p.stage > 1) tags.push(el('span', { class: 'unit-tag perfect' }, '💯 PERFECT'));
+
     const card = el('div', {
       class: 'unit-card',
       style: `--unit-accent: ${info.color}; --unit-icon-bg: ${info.color}1a;`,
@@ -2364,12 +2529,18 @@ function screenUnits(grade) {
     },
       el('div', { class: 'unit-icon' }, u.icon),
       el('div', { class: 'unit-body' },
-        el('div', { class: 'unit-name' }, u.name),
+        el('div', { class: 'unit-name-row' },
+          el('div', { class: 'unit-name' }, u.name),
+          tags.length ? el('div', { class: 'unit-tags' }, ...tags) : null
+        ),
         el('div', { class: 'unit-progress-bar' },
           el('div', { class: 'unit-progress-fill', style: `width: ${pct}%;` })
         ),
         el('div', { class: 'unit-meta' },
-          el('span', {}, `STAGE ${p.stage}`),
+          el('span', { class: 'unit-stage-label' },
+            el('span', { class: 'meta-label' }, '다음'),
+            el('span', { class: 'meta-value' }, `STAGE ${p.stage}`)
+          ),
           el('span', { class: 'unit-stars' }, starStr)
         )
       )
@@ -2476,7 +2647,7 @@ function screenPlay(state) {
       el('div', { class: 'title' }, `${state.unit.icon} ${state.unit.name}`),
       el('div', { class: 'sub' }, stageLabel)
     ),
-    el('div', { class: 'coins' }, String(SAVE.coins + state.coinsEarned), ' P')
+    el('div', { class: 'coins', html: String(SAVE.coins + state.coinsEarned) + '<span class="coin-suffix">P</span>' })
   );
 
   const play = el('div', { class: 'play' });
@@ -2535,7 +2706,7 @@ function screenPlay(state) {
 
   const problemArea = el('div', { class: 'problem-area' + (state.hearts === 1 ? ' danger' : '') + (state.isBoss ? ' boss' : ''), id: 'problemArea' },
     el('div', { class: 'q-stage' }, `문제 ${state.idx + 1} / ${state.problems.length}`),
-    el('div', { class: 'q-text' + (current.q.length > 22 ? ' small' : '') }, current.q),
+    el('div', { class: 'q-text' + (current.q.length > 22 ? ' small' : ''), html: formatMath(current.q) }),
     el('div', { class: 'answer-box', id: 'ansBox' }, '?'),
     el('div', { class: 'feedback', id: 'feedback' })
   );
@@ -2618,7 +2789,7 @@ function submitAnswer(state, isTimeout = false) {
     checkBadges();
   } else {
     box.classList.add('wrong');
-    feedback.textContent = isTimeout ? `⏰ 시간초과! 정답: ${problem.a}` : `❌ 정답: ${problem.a}`;
+    feedback.innerHTML = (isTimeout ? '⏰ 시간초과! 정답: ' : '❌ 정답: ') + formatMath(String(problem.a));
     feedback.className = 'feedback wrong show';
     area.classList.add('shake');
     state.results[state.idx] = false;
@@ -2701,7 +2872,7 @@ function screenResult(state, completed) {
       el('div', { class: 'title' }, passed ? '스테이지 클리어' : '다시 도전'),
       el('div', { class: 'sub' }, `${state.unit.name} · 스테이지 ${state.stage}`)
     ),
-    el('div', { class: 'coins' }, String(SAVE.coins), ' P')
+    el('div', { class: 'coins', html: String(SAVE.coins) + '<span class="coin-suffix">P</span>' })
   );
 
   const result = el('div', { class: 'result' });
