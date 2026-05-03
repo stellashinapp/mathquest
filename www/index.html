@@ -87,18 +87,10 @@
     font-weight: 500;
   }
 
-  /* 홈 인사 영역 (로고 자리 대체) */
-  .topbar-home { padding: 18px 20px 14px; }
-  .home-hello { display: flex; flex-direction: column; }
-  .hello-greeting {
-    font-size: 17px; font-weight: 800;
-    color: var(--text); letter-spacing: -0.5px;
-  }
-  .hello-sub {
-    font-size: 12px; font-weight: 600;
-    color: var(--text-muted); letter-spacing: -0.2px;
-    margin-top: 2px;
-  }
+  /* 홈 탑바 — 미니멀 (코인/뮤트만 우측에) */
+  .topbar-home { padding: 14px 20px 8px; justify-content: flex-end; gap: 10px; }
+  .topbar-home .topbar-spacer { flex: 1; }
+  .topbar-home .mute-btn { position: static; }
   .topbar .back {
     background: var(--surface-soft);
     border: 1px solid var(--border);
@@ -2454,14 +2446,8 @@ function screenHome() {
   const screen = el('div', { class: 'screen' });
   updateStreak(); // 홈 방문 시 출석 체크
 
-  // 시간대별 인사
-  const hr = new Date().getHours();
-  const hello = hr < 6 ? '편안한 새벽이에요' : hr < 12 ? '좋은 아침이에요' : hr < 18 ? '좋은 오후예요' : '편안한 저녁이에요';
   const topbar = el('div', { class: 'topbar topbar-home' },
-    el('div', { class: 'home-hello' },
-      el('div', { class: 'hello-greeting' }, hello),
-      el('div', { class: 'hello-sub' }, '오늘도 한 단계!')
-    ),
+    el('div', { class: 'topbar-spacer' }),
     el('button', {
       class: 'mute-btn',
       title: SAVE.muted ? '소리 켜기' : '소리 끄기',
