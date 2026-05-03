@@ -76,34 +76,28 @@
     color: var(--text);
     z-index: 5;
   }
-  .topbar .brand { display: flex; align-items: center; gap: 11px; }
-  .topbar .brand-logo {
-    display: flex; align-items: center;
-    filter: drop-shadow(0 4px 10px rgba(99, 102, 241, 0.25));
-  }
-  .topbar .brand-logo .logo-mark { display: block; }
-  .topbar .brand-text { display: flex; flex-direction: column; }
   .topbar .title {
     font-weight: 800; font-size: 17px;
     letter-spacing: -0.4px;
     color: var(--text);
   }
-  /* 브랜드(홈) 타이틀만 그라데이션 + 큼직하게 */
-  .topbar .brand .title {
-    font-size: 19px; font-weight: 900;
-    letter-spacing: -0.6px;
-    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-    -webkit-background-clip: text; background-clip: text;
-    -webkit-text-fill-color: transparent;
-  }
   .topbar .sub {
     font-size: 12px; color: var(--text-muted);
-    letter-spacing: 0; margin-top: 2px;
+    letter-spacing: -0.2px; margin-top: 2px;
     font-weight: 500;
   }
-  .topbar .brand .sub {
-    font-size: 11px; font-weight: 600;
-    margin-top: 1px;
+
+  /* 홈 인사 영역 (로고 자리 대체) */
+  .topbar-home { padding: 18px 20px 14px; }
+  .home-hello { display: flex; flex-direction: column; }
+  .hello-greeting {
+    font-size: 17px; font-weight: 800;
+    color: var(--text); letter-spacing: -0.5px;
+  }
+  .hello-sub {
+    font-size: 12px; font-weight: 600;
+    color: var(--text-muted); letter-spacing: -0.2px;
+    margin-top: 2px;
   }
   .topbar .back {
     background: var(--surface-soft);
@@ -133,14 +127,15 @@
   /* === Home === */
   .home { padding: 4px 20px 24px; overflow-y: auto; flex: 1; }
   .home-title {
-    font-size: 24px; font-weight: 900;
-    color: var(--text); letter-spacing: -0.8px;
-    margin: 14px 0 4px;
+    font-size: 22px; font-weight: 800;
+    color: var(--text); letter-spacing: -0.7px;
+    margin: 18px 0 6px;
   }
   .home-sub {
     color: var(--text-muted); font-size: 13px;
-    margin-bottom: 20px; font-weight: 500;
-    letter-spacing: -0.1px;
+    margin-bottom: 18px; font-weight: 500;
+    letter-spacing: -0.2px; line-height: 1.5;
+    word-break: keep-all;
   }
 
   /* === Rank panel === */
@@ -172,21 +167,23 @@
     border-radius: 14px;
     display: flex; align-items: center; justify-content: center;
     backdrop-filter: blur(8px);
+    flex-shrink: 0;
   }
   .rank-text { flex: 1; min-width: 0; }
   .rank-label {
-    font-size: 11px; color: rgba(255, 255, 255, 0.75);
-    font-weight: 700; letter-spacing: 0.5px;
-    margin-bottom: 2px; text-transform: uppercase;
+    font-size: 11px; color: rgba(255, 255, 255, 0.7);
+    font-weight: 700; letter-spacing: -0.1px;
+    margin-bottom: 4px;
   }
   .rank-name {
-    font-size: 19px; font-weight: 800;
-    color: #fff; letter-spacing: -0.5px;
+    font-size: 20px; font-weight: 800;
+    color: #fff; letter-spacing: -0.6px;
+    line-height: 1.1;
   }
   .rank-bar {
     height: 6px;
     background: rgba(255, 255, 255, 0.2);
-    border-radius: 3px; margin-top: 14px; overflow: hidden;
+    border-radius: 3px; margin-top: 16px; overflow: hidden;
   }
   .rank-bar-fill {
     height: 100%;
@@ -198,13 +195,14 @@
     font-size: 12px; color: rgba(255, 255, 255, 0.85);
     font-weight: 600; margin-top: 8px;
     display: flex; justify-content: space-between;
-    letter-spacing: -0.1px;
+    letter-spacing: -0.2px;
   }
   .rank-streak {
-    display: inline-flex; align-items: center; gap: 4px;
-    background: rgba(255, 255, 255, 0.2);
-    color: #fff; padding: 3px 10px; border-radius: 8px;
-    font-size: 11px; font-weight: 700; margin-top: 6px;
+    display: inline-flex; align-items: center; gap: 5px;
+    background: rgba(255, 255, 255, 0.18);
+    color: #fff; padding: 4px 10px; border-radius: 999px;
+    font-size: 11px; font-weight: 700; margin-top: 8px;
+    letter-spacing: -0.1px;
     backdrop-filter: blur(8px);
   }
 
@@ -224,8 +222,15 @@
     border-color: var(--primary);
     box-shadow: var(--shadow-sm);
   }
-  .action-pill .ap-label { font-size: 14px; font-weight: 700; color: var(--text); letter-spacing: -0.2px; }
-  .action-pill .ap-val { font-size: 12px; font-weight: 700; color: var(--text-muted); }
+  .action-pill .ap-label {
+    font-size: 14px; font-weight: 700;
+    color: var(--text); letter-spacing: -0.3px;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .action-pill .ap-val {
+    font-size: 12px; font-weight: 700;
+    color: var(--text-muted); letter-spacing: -0.2px;
+  }
 
   /* === Daily card === */
   .daily-card {
@@ -259,22 +264,31 @@
     border-radius: 14px;
     display: flex; align-items: center; justify-content: center;
     backdrop-filter: blur(8px);
+    flex-shrink: 0;
   }
-  .daily-card.done .daily-icon {
-    background: var(--surface);
-  }
+  .daily-card.done .daily-icon { background: var(--surface); }
   .daily-text { flex: 1; min-width: 0; position: relative; }
   .daily-label {
     font-size: 16px; font-weight: 800;
-    color: #fff; letter-spacing: -0.3px;
-    margin-bottom: 2px;
+    color: #fff; letter-spacing: -0.4px;
+    margin-bottom: 3px;
   }
   .daily-card.done .daily-label { color: var(--text); }
-  .daily-desc { font-size: 12px; color: rgba(255, 255, 255, 0.9); font-weight: 600; letter-spacing: -0.1px; }
+  .daily-desc {
+    font-size: 12px; color: rgba(255, 255, 255, 0.88);
+    font-weight: 600; letter-spacing: -0.2px;
+    line-height: 1.4;
+  }
   .daily-card.done .daily-desc { color: var(--text-muted); }
   .daily-arrow {
-    font-size: 20px; font-weight: 900;
+    font-size: 18px; font-weight: 900;
     color: #fff; position: relative;
+    width: 28px; height: 28px;
+    background: rgba(255, 255, 255, 0.18);
+    border-radius: 999px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    backdrop-filter: blur(8px);
   }
 
   /* === 학년 선택 헤더 === */
@@ -2440,13 +2454,13 @@ function screenHome() {
   const screen = el('div', { class: 'screen' });
   updateStreak(); // 홈 방문 시 출석 체크
 
-  const topbar = el('div', { class: 'topbar' },
-    el('div', { class: 'brand' },
-      el('div', { class: 'brand-logo', html: logo(34) }),
-      el('div', { class: 'brand-text' },
-        el('div', { class: 'title' }, 'Math Quest'),
-        el('div', { class: 'sub' }, '초등 수학 퀘스트')
-      )
+  // 시간대별 인사
+  const hr = new Date().getHours();
+  const hello = hr < 6 ? '편안한 새벽이에요' : hr < 12 ? '좋은 아침이에요' : hr < 18 ? '좋은 오후예요' : '편안한 저녁이에요';
+  const topbar = el('div', { class: 'topbar topbar-home' },
+    el('div', { class: 'home-hello' },
+      el('div', { class: 'hello-greeting' }, hello),
+      el('div', { class: 'hello-sub' }, '오늘도 한 단계!')
     ),
     el('button', {
       class: 'mute-btn',
