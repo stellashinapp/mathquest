@@ -851,6 +851,48 @@
   .home-sub, .daily-desc, .rank-progress-text,
   .stage-cleared, .b-desc { word-break: keep-all; line-height: 1.45; }
 
+  /* === SVG 아이콘 inline 정렬 === */
+  .ico {
+    display: inline-block;
+    vertical-align: -3px;
+    flex-shrink: 0;
+  }
+  .topbar .back .ico, .mute-btn .ico { vertical-align: middle; }
+  .ap-label .ico { vertical-align: -3px; margin-right: 4px; color: var(--primary); }
+  .daily-icon .ico { color: #fff; }
+  .daily-card.done .daily-icon .ico { color: var(--success); }
+  .rank-streak .ico { vertical-align: -2px; color: #ffaa3a; }
+  .reward .ico { vertical-align: -3px; margin-right: 4px; color: var(--accent); }
+  .combo-badge .ico { vertical-align: -2px; }
+  .boss-banner .ico { vertical-align: -2px; }
+  /* 단원 아이콘 inline 색상 (인디고 액센트) */
+  .unit-icon .ico { color: var(--primary); }
+  .unit-card[style*="--unit-accent"] .unit-icon .ico { color: var(--unit-accent, var(--primary)); }
+  /* 별 SVG 색상 */
+  .stars-big .star .ico { color: var(--gold); }
+  .stars-big .star.empty .ico { color: var(--border); }
+  /* 하트 SVG 색상 */
+  .hearts .heart .ico { color: var(--danger); }
+  .hearts .heart.lost .ico { color: var(--border); }
+  /* 결과 큰 아이콘 */
+  .big-icon-wrap {
+    display: flex; align-items: center; justify-content: center;
+    width: 110px; height: 110px;
+    border-radius: 50%;
+    margin-bottom: 14px;
+    animation: bounce .6s;
+  }
+  .big-icon-wrap.success {
+    background: var(--accent-soft);
+    color: var(--accent);
+    box-shadow: 0 8px 28px rgba(245, 158, 11, 0.3);
+  }
+  .big-icon-wrap.fail {
+    background: var(--surface-soft);
+    color: var(--text-muted);
+  }
+  .crown .ico { color: var(--accent); }
+
   /* === Answer box 펄스 === */
   .answer-box:not(.correct):not(.wrong) {
     animation: ansPulse 2s ease-in-out infinite;
@@ -858,6 +900,45 @@
   @keyframes ansPulse {
     0%, 100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); }
     50% { box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1); }
+  }
+
+  /* === 오답 시 풀이/공식 카드 === */
+  .explanation-card {
+    position: absolute;
+    bottom: 14px; left: 16px; right: 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--primary);
+    border-radius: 12px;
+    padding: 12px 14px;
+    box-shadow: var(--shadow);
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity .3s, transform .35s cubic-bezier(0.2, 1.3, 0.6, 1);
+    z-index: 5;
+    text-align: left;
+  }
+  .explanation-card.show { opacity: 1; transform: translateY(0); }
+  .exp-label {
+    font-size: 11px; font-weight: 800;
+    color: var(--primary);
+    letter-spacing: 0.3px;
+    margin-bottom: 4px;
+  }
+  .exp-text {
+    font-size: 13.5px; font-weight: 600;
+    color: var(--text); line-height: 1.5;
+    word-break: keep-all;
+  }
+  .exp-text b {
+    color: var(--primary-deep);
+    font-weight: 800;
+  }
+  /* 풀이 카드 안에 분수 나오면 inline 표시 */
+  .exp-text .frac { font-size: 0.82em; }
+  /* 오답 피드백을 위로 살짝 띄움 (풀이 카드와 겹치지 않게) */
+  .problem-area > .feedback.wrong.show {
+    bottom: auto; top: 14px;
   }
 
   /* === 정답 스파클 (답 박스 주변에서 사방으로 퍼짐) === */
@@ -2272,8 +2353,9 @@ function screenHome() {
     el('button', {
       class: 'mute-btn',
       title: SAVE.muted ? '소리 켜기' : '소리 끄기',
+      html: icon(SAVE.muted ? 'volume-off' : 'volume-on', { size: 18 }),
       onclick: (e) => { e.stopPropagation(); SAVE.muted = !SAVE.muted; saveSave(SAVE); render(screenHome()); }
-    }, SAVE.muted ? '🔇' : '🔊'),
+    }),
     el('div', { class: 'coins', html: String(SAVE.coins) + '<span class="coin-suffix">P</span>' })
   );
 
@@ -2287,7 +2369,7 @@ function screenHome() {
       el('div', { class: 'rank-text' },
         el('div', { class: 'rank-label' }, '내 랭크'),
         el('div', { class: 'rank-name' }, rank.name),
-        SAVE.streak > 0 ? el('div', { class: 'rank-streak' }, '🔥 ', String(SAVE.streak), '일 연속') : null,
+        SAVE.streak > 0 ? el('div', { class: 'rank-streak', html: icon('flame', { size: 12 }) + ' ' + SAVE.streak + '일 연속' }) : null,
       ),
     ),
     el('div', { class: 'rank-bar' },
@@ -2303,11 +2385,11 @@ function screenHome() {
   const unlockedBadges = SAVE.badges.length;
   const actions = el('div', { class: 'home-actions' },
     el('div', { class: 'action-pill', onclick: () => render(screenBadges()) },
-      el('span', { class: 'ap-label' }, '🏆 뱃지'),
+      el('span', { class: 'ap-label', html: icon('trophy', { size: 16 }) + ' 뱃지' }),
       el('span', { class: 'ap-val' }, `${unlockedBadges} / ${BADGES.length}`)
     ),
     el('div', { class: 'action-pill', onclick: () => render(screenStats()) },
-      el('span', { class: 'ap-label' }, '📊 기록'),
+      el('span', { class: 'ap-label', html: icon('chart', { size: 16 }) + ' 기록' }),
       el('span', { class: 'ap-val' }, `정답 ${SAVE.stats.correctCount}`)
     ),
   );
@@ -2319,7 +2401,7 @@ function screenHome() {
     class: 'daily-card' + (dailyDone ? ' done' : ''),
     onclick: () => { if (!dailyDone) startDailyChallenge(); }
   },
-    el('div', { class: 'daily-icon' }, dailyDone ? '✅' : '🎯'),
+    el('div', { class: 'daily-icon', html: icon(dailyDone ? 'check' : 'target', { size: 26 }) }),
     el('div', { class: 'daily-text' },
       el('div', { class: 'daily-label' }, dailyDone ? '오늘 완료!' : '오늘의 도전'),
       el('div', { class: 'daily-desc' }, dailyDone ? '내일 다시 만나요' : '7문제 · 시간제한 25초 · 코인 2배')
@@ -2347,7 +2429,7 @@ function screenHome() {
       style: `--grade-accent: ${info.color};`,
       onclick: () => render(screenUnits(+g))
     },
-      isFullyMastered ? el('div', { class: 'crown' }, '👑') : null,
+      isFullyMastered ? el('div', { class: 'crown', html: icon('crown', { size: 18 }) }) : null,
       el('div', { class: 'stars' }, `★ ${totalStars} / ${maxStars}`),
       el('div', { class: 'emoji' }, info.emoji),
       el('div', { class: 'g-text' },
@@ -2367,7 +2449,7 @@ function screenHome() {
 function screenBadges() {
   const screen = el('div', { class: 'screen' });
   const topbar = el('div', { class: 'topbar' },
-    el('button', { class: 'back', onclick: () => render(screenHome()) }, '←'),
+    el('button', { class: 'back', onclick: () => render(screenHome()), html: icon('chevron-left', { size: 18 }) }),
     el('div', {},
       el('div', { class: 'title' }, '뱃지 수집'),
       el('div', { class: 'sub' }, `${SAVE.badges.length} / ${BADGES.length} 획득`)
@@ -2393,7 +2475,7 @@ function screenBadges() {
 function screenStats() {
   const screen = el('div', { class: 'screen' });
   const topbar = el('div', { class: 'topbar' },
-    el('button', { class: 'back', onclick: () => render(screenHome()) }, '←'),
+    el('button', { class: 'back', onclick: () => render(screenHome()), html: icon('chevron-left', { size: 18 }) }),
     el('div', {},
       el('div', { class: 'title' }, '학습 기록'),
       el('div', { class: 'sub' }, '누적 통계')
@@ -2433,7 +2515,7 @@ function screenUnits(grade) {
   const info = GRADES[grade];
   const screen = el('div', { class: 'screen' });
   const topbar = el('div', { class: 'topbar' },
-    el('button', { class: 'back', onclick: () => render(screenHome()) }, '←'),
+    el('button', { class: 'back', onclick: () => render(screenHome()), html: icon('chevron-left', { size: 18 }) }),
     el('div', {},
       el('div', { class: 'title' }, info.name),
       el('div', { class: 'sub' }, '단원을 고르세요')
@@ -2460,7 +2542,7 @@ function screenUnits(grade) {
       style: `--unit-accent: ${info.color}; --unit-icon-bg: ${info.color}1a;`,
       onclick: () => startStage(grade, u.id)
     },
-      el('div', { class: 'unit-icon' }, u.icon),
+      el('div', { class: 'unit-icon', html: icon(UNIT_ICONS[u.id] || 'hash', { size: 22 }) }),
       el('div', { class: 'unit-body' },
         el('div', { class: 'unit-name-row' },
           el('div', { class: 'unit-name' }, u.name),
@@ -2570,14 +2652,18 @@ function screenPlay(state) {
   if (state.isDaily) stageLabel = `🎯 오늘의 도전`;
 
   const topbar = el('div', { class: 'topbar' },
-    el('button', { class: 'back', onclick: () => {
-      if (confirm('스테이지를 그만두고 단원으로 돌아갈까요?')) {
-        if (window.__playTimerId) { clearTimeout(window.__playTimerId); window.__playTimerId = null; }
-        render(state.isDaily ? screenHome() : screenUnits(state.grade));
+    el('button', {
+      class: 'back',
+      html: icon('chevron-left', { size: 18 }),
+      onclick: () => {
+        if (confirm('스테이지를 그만두고 단원으로 돌아갈까요?')) {
+          if (window.__playTimerId) { clearTimeout(window.__playTimerId); window.__playTimerId = null; }
+          render(state.isDaily ? screenHome() : screenUnits(state.grade));
+        }
       }
-    }}, '←'),
+    }),
     el('div', {},
-      el('div', { class: 'title' }, `${state.unit.icon} ${state.unit.name}`),
+      el('div', { class: 'title' }, `${state.unit.name}`),
       el('div', { class: 'sub' }, stageLabel)
     ),
     el('div', { class: 'coins', html: String(SAVE.coins + state.coinsEarned) + '<span class="coin-suffix">P</span>' })
@@ -2587,18 +2673,20 @@ function screenPlay(state) {
 
   // 보스 배너
   if (state.isBoss) {
-    play.appendChild(el('div', { class: 'boss-banner' }, '⚔️ 보스 스테이지 ⚔️'));
+    play.appendChild(el('div', { class: 'boss-banner', html: icon('sword', { size: 14 }) + ' 보스 스테이지 ' + icon('sword', { size: 14 }) }));
   } else if (state.isDaily) {
-    play.appendChild(el('div', { class: 'boss-banner daily' }, '🎯 오늘의 도전'));
+    play.appendChild(el('div', { class: 'boss-banner daily', html: icon('target', { size: 14 }) + ' 오늘의 도전' }));
   }
 
   const hud = el('div', { class: 'hud' });
   const hearts = el('div', { class: 'hearts' });
   for (let i = 0; i < 3; i++) {
-    hearts.appendChild(el('span', { class: i < state.hearts ? '' : 'lost' }, '❤️'));
+    hearts.appendChild(el('span', { class: i < state.hearts ? 'heart' : 'heart lost', html: icon(i < state.hearts ? 'heart' : 'heart-empty', { size: 22 }) }));
   }
-  const combo = el('div', { class: 'combo-badge' + (state.combo >= 2 ? ' show' : ''), id: 'combo' },
-    `🔥 ${state.combo} 콤보`);
+  const combo = el('div', {
+    class: 'combo-badge' + (state.combo >= 2 ? ' show' : ''), id: 'combo',
+    html: icon('flame', { size: 14 }) + ' ' + state.combo + ' 콤보'
+  });
   hud.append(hearts, combo);
   play.appendChild(hud);
 
@@ -2677,6 +2765,237 @@ function pressKey(k, state) {
   }
   box.textContent = currentAnswer === '' ? '?' : currentAnswer;
   box.classList.remove('correct', 'wrong');
+}
+
+// =============================================================
+// SVG 아이콘 라이브러리 (Lucide 스타일, 24×24, currentColor)
+// =============================================================
+const ICONS = {
+  // 사칙연산
+  'plus':       '<path d="M12 5v14M5 12h14"/>',
+  'minus':      '<path d="M5 12h14"/>',
+  'multiply':   '<path d="M6 6l12 12M18 6L6 18"/>',
+  'divide':     '<path d="M5 12h14"/><circle cx="12" cy="6" r="1.4" fill="currentColor"/><circle cx="12" cy="18" r="1.4" fill="currentColor"/>',
+  'plus-minus': '<path d="M5 7h6M8 4v6M13 17h6"/>',
+  'sigma':      '<path d="M18 7H6l6 5-6 5h12"/>',
+  // 숫자/도형
+  'hash':       '<path d="M4 9h16M4 15h16M10 3L8 21M16 3l-2 18"/>',
+  'pie':        '<path d="M21 12A9 9 0 1 1 12 3v9z"/>',
+  'triangle':   '<path d="M12 4l9 16H3z"/>',
+  'square':     '<rect x="4" y="4" width="16" height="16" rx="2"/>',
+  'circle':     '<circle cx="12" cy="12" r="9"/>',
+  'cube':       '<path d="M12 3l9 5v8l-9 5-9-5V8z"/><path d="M12 3v18M3 8l9 5 9-5"/>',
+  'ruler':      '<path d="M3 17l4-4 4 4 4-4 4 4M3 17V7l14-4 4 4-14 14z"/>',
+  'angle':      '<path d="M21 19H5L19 5"/><path d="M11 19a4 4 0 0 0-4-4" fill="none"/>',
+  // 시간/측정
+  'clock':      '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  'timer':      '<circle cx="12" cy="13" r="8"/><path d="M9 2h6M12 5v3M12 17l3-3"/>',
+  // 사고/개념
+  'lightbulb':  '<path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12c1 1 1 2 1 4h6c0-2 0-3 1-4a7 7 0 0 0-4-12z"/>',
+  'repeat':     '<path d="M17 1l4 4-4 4M3 11V9a4 4 0 0 1 4-4h14M7 23l-4-4 4-4M21 13v2a4 4 0 0 1-4 4H3"/>',
+  'mirror':     '<path d="M12 3v18M5 8l-2 4 2 4M19 8l2 4-2 4"/>',
+  'percent':    '<path d="M19 5L5 19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/>',
+  'trending':   '<path d="M3 17l6-6 4 4 8-8M14 7h7v7"/>',
+  'chart':      '<path d="M3 3v18h18M7 14l3-3 3 3 5-5"/>',
+  'scale':      '<path d="M12 3v18M5 11l3-7 3 7M16 11l3-7 3 7M5 11a3 3 0 0 0 6 0M16 11a3 3 0 0 0 6 0"/>',
+  // 게임 요소
+  'heart':      '<path d="M20 8a5 5 0 0 0-9-3 5 5 0 0 0-9 3c0 7 9 11 9 11s9-4 9-11z" fill="currentColor"/>',
+  'heart-empty':'<path d="M20 8a5 5 0 0 0-9-3 5 5 0 0 0-9 3c0 7 9 11 9 11s9-4 9-11z"/>',
+  'star':       '<path d="M12 2l3 7 7 .8-5 4.6 1.5 7.6-6.5-3.7-6.5 3.7L7 14.4 2 9.8 9 9z" fill="currentColor"/>',
+  'star-empty': '<path d="M12 2l3 7 7 .8-5 4.6 1.5 7.6-6.5-3.7-6.5 3.7L7 14.4 2 9.8 9 9z"/>',
+  'trophy':     '<path d="M6 4h12v6a6 6 0 0 1-12 0V4zM10 18h4v3h-4z"/><path d="M4 4h2v3a2 2 0 0 1-2-2V4zm14 0h2v1a2 2 0 0 1-2 2V4zM8 21h8"/>',
+  'medal':      '<circle cx="12" cy="14" r="6"/><path d="M8 8L5 2h4l2 4M16 8l3-6h-4l-2 4"/>',
+  'target':     '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/>',
+  'flame':      '<path d="M12 2s4 5 4 9a4 4 0 0 1-8 0c0-2 1-3 1-5 0 2 1 3 3 4 0-3 0-6 0-8z" fill="currentColor"/>',
+  'bolt':       '<path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z" fill="currentColor"/>',
+  'sword':      '<path d="M14 6l4-4M14 6l-9 9 3 3 9-9zM14 6l4 4M5 18l-3 3M9 18l4 4"/>',
+  'gift':       '<rect x="3" y="8" width="18" height="13" rx="2"/><path d="M3 12h18M12 8v13M12 8a3 3 0 0 1 0-6 3 3 0 0 1 0 6z"/>',
+  'crown':      '<path d="M3 18h18M3 18l2-10 4 5 3-9 3 9 4-5 2 10z"/>',
+  'shield':     '<path d="M12 2l8 4v6c0 5-3.5 9-8 10-4.5-1-8-5-8-10V6l8-4z"/>',
+  // UI
+  'chevron-left':  '<path d="M15 6l-6 6 6 6"/>',
+  'chevron-right': '<path d="M9 6l6 6-6 6"/>',
+  'volume-on':  '<path d="M11 5L6 9H2v6h4l5 4z" fill="currentColor"/><path d="M15 9a4 4 0 0 1 0 6M18 6a8 8 0 0 1 0 12"/>',
+  'volume-off': '<path d="M11 5L6 9H2v6h4l5 4z" fill="currentColor"/><path d="M22 9l-6 6M16 9l6 6"/>',
+  'coin':       '<circle cx="12" cy="12" r="9"/><path d="M9 9h4a2 2 0 0 1 0 4h-4M9 9v6h4"/>',
+  'check':      '<path d="M5 12l5 5 9-9"/>',
+  'x':          '<path d="M5 5l14 14M19 5L5 19"/>',
+  'lock':       '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
+  'play':       '<path d="M5 4l14 8-14 8z" fill="currentColor"/>',
+  'arrow-right':'<path d="M5 12h14M13 5l7 7-7 7"/>',
+  'sparkles':   '<path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5z"/><path d="M19 15l.7 1.3L21 17l-1.3.7L19 19l-.7-1.3L17 17l1.3-.7zM5 17l.5 1L7 18.5l-1.5.5L5 20l-.5-1L3 18.5l1.5-.5z"/>',
+};
+
+function icon(name, opts = {}) {
+  const inner = ICONS[name];
+  if (!inner) return '';
+  const size = opts.size || 22;
+  const sw = opts.strokeWidth || 2;
+  return `<svg class="ico" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round">${inner}</svg>`;
+}
+
+// 단원 ID → 아이콘 이름 매핑
+const UNIT_ICONS = {
+  // 1학년
+  'g1-add10': 'plus', 'g1-sub10': 'minus', 'g1-add20': 'plus', 'g1-sub20': 'minus',
+  'g1-num50': 'hash', 'g1-mixed': 'plus-minus', 'g1-pattern': 'repeat', 'g1-shape': 'triangle',
+  // 2학년
+  'g2-add2': 'plus', 'g2-sub2': 'minus', 'g2-num3': 'hash', 'g2-mul': 'multiply',
+  'g2-length': 'ruler', 'g2-time': 'clock', 'g2-pattern': 'repeat', 'g2-shape': 'square',
+  // 3학년
+  'g3-add3': 'plus-minus', 'g3-mul': 'multiply', 'g3-div': 'divide',
+  'g3-frac': 'pie', 'g3-dec': 'sigma', 'g3-shape': 'square',
+  'g3-word': 'lightbulb', 'g3-angle': 'angle',
+  // 4학년
+  'g4-bignum': 'hash', 'g4-mul3': 'multiply', 'g4-div2': 'divide',
+  'g4-angle': 'angle', 'g4-frac-sd': 'pie', 'g4-dec-as': 'sigma',
+  'g4-pattern': 'trending', 'g4-shape': 'square',
+  // 5학년
+  'g5-factor': 'hash', 'g5-frac-diff': 'pie', 'g5-frac-mul': 'pie',
+  'g5-dec-mul': 'sigma', 'g5-area': 'square', 'g5-avg': 'chart',
+  'g5-symmetry': 'mirror', 'g5-cuboid': 'cube',
+  // 6학년
+  'g6-frac-div': 'pie', 'g6-dec-div': 'sigma', 'g6-ratio': 'percent',
+  'g6-circle': 'circle', 'g6-volume': 'cube', 'g6-proportion': 'scale',
+  'g6-prism': 'cube', 'g6-blocks': 'cube', 'g6-seq': 'trending',
+};
+
+// =============================================================
+// 오답 시 풀이/공식 자동 생성 — 문제 패턴을 인식해 한국어 풀이 반환
+// =============================================================
+function getExplanation(problem) {
+  const q = problem.q;
+  const a = String(problem.a);
+  const fmt = (s) => formatMath(String(s));
+
+  // 1) 두 수 사칙연산: a OP b = ?
+  let m = q.match(/^(\d+)\s*([+\-×÷])\s*(\d+)\s*=\s*\?$/);
+  if (m) {
+    const n1 = +m[1], op = m[2], n2 = +m[3];
+    if (op === '+') return `${n1} + ${n2} 는 ${n1}에 ${n2}만큼 더한 값. ${n1} + ${n2} = <b>${n1+n2}</b>`;
+    if (op === '-') return `${n1} - ${n2} 는 ${n1}에서 ${n2}만큼 뺀 값. ${n1} - ${n2} = <b>${n1-n2}</b>`;
+    if (op === '×') return `${n1} × ${n2} = ${n1}을(를) ${n2}번 더한 것. = <b>${n1*n2}</b>`;
+    if (op === '÷') return `${n1} ÷ ${n2}: ${n2} × ? = ${n1} 를 만족하는 ?. <b>${n2} × ${n1/n2} = ${n1}</b>`;
+  }
+  // 2) 빈칸 문제: a + ? = c
+  m = q.match(/^(\d+)\s*([+\-×÷])\s*\?\s*=\s*(\d+)$/);
+  if (m) {
+    const a1 = +m[1], op = m[2], c = +m[3];
+    if (op === '+') return `${a1} + ? = ${c}. ?를 구하려면 <b>${c} - ${a1} = ${c - a1}</b>`;
+    if (op === '-') return `${a1} - ? = ${c}. ?를 구하려면 <b>${a1} - ${c} = ${a1 - c}</b>`;
+    if (op === '×') return `${a1} × ? = ${c}. ?를 구하려면 <b>${c} ÷ ${a1} = ${c / a1}</b>`;
+    if (op === '÷') return `${a1} ÷ ? = ${c}. ?를 구하려면 <b>${a1} ÷ ${c} = ${a1 / c}</b>`;
+  }
+  // 3) 세 수 연산
+  m = q.match(/^(\d+)\s*([+\-])\s*(\d+)\s*([+\-])\s*(\d+)\s*=\s*\?$/);
+  if (m) {
+    let v = +m[1];
+    const s1 = m[2] === '+' ? v + +m[3] : v - +m[3];
+    const s2 = m[4] === '+' ? s1 + +m[5] : s1 - +m[5];
+    return `왼쪽부터 차례대로: ${m[1]} ${m[2]} ${m[3]} = ${s1}, ${s1} ${m[4]} ${m[5]} = <b>${s2}</b>`;
+  }
+  // 4) 동분모 분수 덧뺄
+  m = q.match(/^(\d+)\/(\d+)\s*([+\-])\s*(\d+)\/(\d+)\s*=/);
+  if (m) {
+    const n1 = +m[1], d1 = +m[2], op = m[3], n2 = +m[4], d2 = +m[5];
+    if (d1 === d2) {
+      const sumN = op === '+' ? n1 + n2 : n1 - n2;
+      return `분모가 같으면 분자끼리 ${op}: <b>${sumN}/${d1}</b> 를 기약하면 ${a}`;
+    }
+    // 이분모 → 통분
+    return `통분 (분모 ${d1}, ${d2} 의 곱 ${d1*d2}로): ${n1*d2}/${d1*d2} ${op} ${n2*d1}/${d1*d2} = ${a}`;
+  }
+  // 5) 분수 곱셈
+  m = q.match(/^(\d+)\/(\d+)\s*×\s*(\d+)\/(\d+)/);
+  if (m) {
+    return `분수 곱셈: 분자끼리 곱하고 분모끼리 곱해요. ${m[1]}×${m[3]} / ${m[2]}×${m[4]} → 기약 → <b>${a}</b>`;
+  }
+  // 5b) 분수 × 자연수
+  m = q.match(/^(\d+)\/(\d+)\s*×\s*(\d+)\s*=/);
+  if (m) {
+    return `분수 × 자연수: 분자에만 곱해요. ${m[1]}×${m[3]} / ${m[2]} → 기약 → <b>${a}</b>`;
+  }
+  // 6) 분수 나눗셈
+  m = q.match(/^(\d+)\/(\d+)\s*÷\s*(\d+)\/(\d+)/);
+  if (m) {
+    return `분수 나눗셈: 뒤 분수의 분자/분모를 뒤집어 곱해요. ${m[1]}/${m[2]} × ${m[4]}/${m[3]} = <b>${a}</b>`;
+  }
+  // 7) 소수 사칙
+  m = q.match(/^(\d+(?:\.\d+)?)\s*([+\-×÷])\s*(\d+(?:\.\d+)?)\s*=/);
+  if (m) {
+    const op = m[2];
+    if (op === '+') return `소수점을 맞추고 자릿수대로 더해요. 답 = <b>${a}</b>`;
+    if (op === '-') return `소수점을 맞추고 자릿수대로 빼요. 답 = <b>${a}</b>`;
+    if (op === '×') return `자연수처럼 곱한 뒤 소수점 자릿수의 합만큼 옮겨요. 답 = <b>${a}</b>`;
+    if (op === '÷') return `소수 나눗셈: 양쪽에 같은 자릿수만큼 점을 옮겨 자연수로 만들고 나눠요. 답 = <b>${a}</b>`;
+  }
+  // 8) 도형 — 둘레
+  if (q.includes('정사각형') && q.includes('둘레')) return `<b>정사각형 둘레 = 한 변 × 4</b>. 답 = ${a}`;
+  if (q.includes('직사각형') && q.includes('둘레')) return `<b>직사각형 둘레 = (가로 + 세로) × 2</b>. 답 = ${a}`;
+  if (q.includes('정삼각형') && q.includes('둘레')) return `<b>정삼각형 둘레 = 한 변 × 3</b>. 답 = ${a}`;
+  // 도형 — 넓이
+  if (q.includes('직사각형') && q.includes('넓이')) return `<b>직사각형 넓이 = 가로 × 세로</b>. 답 = ${a}`;
+  if (q.includes('정사각형') && q.includes('넓이')) return `<b>정사각형 넓이 = 한 변 × 한 변</b>. 답 = ${a}`;
+  if (q.includes('삼각형') && q.includes('넓이')) return `<b>삼각형 넓이 = 밑변 × 높이 ÷ 2</b>. 답 = ${a}`;
+  if (q.includes('사다리꼴') && q.includes('넓이')) return `<b>사다리꼴 넓이 = (윗변 + 아랫변) × 높이 ÷ 2</b>. 답 = ${a}`;
+  if (q.includes('평행사변형') && q.includes('넓이')) return `<b>평행사변형 넓이 = 밑변 × 높이</b>. 답 = ${a}`;
+  // 원
+  if (q.includes('원의 둘레') || (q.includes('원') && q.includes('둘레'))) return `<b>원 둘레 = 지름 × π = 반지름 × 2 × π</b> (π = 3.14). 답 = ${a}`;
+  if (q.includes('원의 넓이') || (q.includes('원') && q.includes('넓이'))) return `<b>원 넓이 = 반지름 × 반지름 × π</b> (π = 3.14). 답 = ${a}`;
+  // 부피·겉넓이
+  if (q.includes('직육면체') && q.includes('부피')) return `<b>직육면체 부피 = 가로 × 세로 × 높이</b>. 답 = ${a}`;
+  if (q.includes('정육면체') && q.includes('부피')) return `<b>정육면체 부피 = 한 모서리 × 한 모서리 × 한 모서리</b>. 답 = ${a}`;
+  if (q.includes('겉넓이')) return `<b>직육면체 겉넓이 = 2 × (가로×세로 + 세로×높이 + 가로×높이)</b>. 답 = ${a}`;
+  // 9) 시간/길이
+  if (q.includes('시간') && q.includes('분')) return `<b>1시간 = 60분</b>. 시간을 분으로: 시간 × 60 + 남은 분`;
+  if (q.includes('m') && q.includes('cm')) return `<b>1m = 100cm</b>. m를 cm로: m × 100 + 남은 cm`;
+  // 10) 각형 변/꼭짓점/내각
+  if (q.includes('각형') && (q.includes('변') || q.includes('꼭짓점') || q.includes('각'))) {
+    if (q.includes('내각의 합')) return `<b>n각형 내각의 합 = (n - 2) × 180°</b>`;
+    if (q.includes('대각선')) return `<b>n각형 대각선 수 = n × (n - 3) ÷ 2</b>`;
+    return `n각형: 변 = 꼭짓점 = 각 = n. 답 = ${a}`;
+  }
+  // 11) 직육면체 / 각기둥 / 각뿔 성질
+  if (q.includes('직육면체')) return `직육면체: <b>면 6, 꼭짓점 8, 모서리 12</b>`;
+  if (q.includes('각기둥')) return `<b>n각기둥</b>: 면 (n+2), 꼭짓점 2n, 모서리 3n`;
+  if (q.includes('각뿔')) return `<b>n각뿔</b>: 면 (n+1), 꼭짓점 (n+1), 모서리 2n`;
+  // 12) 쌓기나무
+  if (q.includes('쌓기나무')) {
+    if (q.includes('정육면체')) return `한 모서리 n인 정육면체 = <b>n × n × n</b> 개`;
+    if (q.includes('직육면체')) return `직육면체로 쌓기 = <b>가로 × 세로 × 높이</b>`;
+    return `층마다 같은 개수: <b>한 층 개수 × 층 수</b>`;
+  }
+  // 13) 비례식 / 비
+  if (q.match(/\d+\s*:\s*\d+\s*=/)) return `비례식 a:b = c:d 이면 <b>a × d = b × c</b>. ?를 옆 비와 같은 배수로 구해요.`;
+  if (q.includes('%') && q.includes('전체')) return `<b>비율(%) = (부분 ÷ 전체) × 100</b>`;
+  if (q.includes('%')) return `<b>전체 × 백분율 ÷ 100</b>`;
+  // 14) 평균
+  if (q.includes('평균')) return `<b>평균 = 모든 수의 합 ÷ 개수</b>`;
+  // 15) 약수/배수
+  if (q.includes('최대공약수')) return `두 수를 동시에 나눌 수 있는 가장 큰 수. 공약수 중 최댓값.`;
+  if (q.includes('최소공배수')) return `두 수의 공통된 배수 중 가장 작은 수.`;
+  if (q.includes('약수')) return `어떤 수를 나누어떨어지게 하는 모든 수.`;
+  // 16) 각도
+  if (q.includes('직각')) return `<b>직각 = 90°</b>`;
+  if (q.includes('삼각형') && q.includes('°')) return `<b>삼각형 내각의 합 = 180°</b>`;
+  if (q.includes('사각형') && q.includes('°')) return `<b>사각형 내각의 합 = 360°</b>`;
+  // 17) 대칭
+  if (q.includes('대칭축')) return `정n각형의 대칭축 수 = <b>n개</b>`;
+  // 18) 수열
+  if (q.includes('앞 두 수의 합')) return `피보나치 규칙: 앞의 두 수를 더해 다음 수. (1,1,2,3,5,8...)`;
+  if (q.includes('규칙') || q.includes('곱하는')) return `숫자 사이의 차이(또는 곱하는 값)을 찾아 같은 규칙으로 다음 수.`;
+  if (q.includes('제곱')) return `제곱수: 1²=1, 2²=4, 3²=9, 4²=16, 5²=25...`;
+  // 19) 50까지의 수
+  if (q.includes('10이') && q.includes('1이')) return `십 자리 × 10 + 일 자리`;
+  if (q.includes('큰 수')) return `n에서 1 큰 수 = n + 1`;
+  if (q.includes('작은 수')) return `n보다 1 작은 수 = n - 1`;
+  // 20) 사고력 문장제
+  if (q.includes('나눠주') || q.includes('똑같이')) return `<b>전체 ÷ 사람 수</b> = 한 명당 개수`;
+  if (q.includes('상자') && q.includes('개씩')) return `<b>한 상자 개수 × 상자 수</b>`;
+  if (q.includes('원짜리')) return `<b>가격 × 개수</b>`;
+  if (q.includes('잃어') || q.includes('남은')) return `<b>처음 - 사라진 수</b> = 남은 수`;
+  // 기본
+  return `정답은 <b>${a}</b>`;
 }
 
 // 정답 시 답 박스 주변에 작은 스파클 띄우기
@@ -2758,11 +3077,16 @@ function submitAnswer(state, isTimeout = false) {
     state.combo = 0;
     state.hearts--;
     playWrong();
+    // 풀이/공식 카드 표시
+    showExplanationCard(area, problem);
   }
 
   setTimeout(() => {
     area.classList.remove('shake', 'pop');
     feedback.classList.remove('show');
+    // 풀이 카드 정리
+    const expCard = document.querySelector('.explanation-card');
+    if (expCard) expCard.remove();
     state.idx++;
     if (state.hearts <= 0) {
       render(screenResult(state, false));
@@ -2771,7 +3095,19 @@ function submitAnswer(state, isTimeout = false) {
     } else {
       render(screenPlay(state));
     }
-  }, isCorrect ? 900 : 1500);
+  }, isCorrect ? 900 : 4200);  // 오답 시 풀이 읽을 시간 충분히 확보
+}
+
+// 풀이 카드 띄우기 (오답일 때)
+function showExplanationCard(area, problem) {
+  const card = document.createElement('div');
+  card.className = 'explanation-card';
+  const expHtml = getExplanation(problem);
+  card.innerHTML =
+    '<div class="exp-label">📘 풀이</div>' +
+    '<div class="exp-text">' + expHtml + '</div>';
+  area.appendChild(card);
+  requestAnimationFrame(() => card.classList.add('show'));
 }
 
 // ---------- Result ----------
@@ -2829,7 +3165,7 @@ function screenResult(state, completed) {
 
   const screen = el('div', { class: 'screen' });
   const topbar = el('div', { class: 'topbar' },
-    el('button', { class: 'back', onclick: () => render(screenUnits(state.grade)) }, '←'),
+    el('button', { class: 'back', onclick: () => render(screenUnits(state.grade)), html: icon('chevron-left', { size: 18 }) }),
     el('div', {},
       el('div', { class: 'title' }, passed ? '스테이지 클리어' : '다시 도전'),
       el('div', { class: 'sub' }, `${state.unit.name} · 스테이지 ${state.stage}`)
@@ -2844,22 +3180,23 @@ function screenResult(state, completed) {
     result.appendChild(el('div', { class: 'perfect-banner' }, 'PERFECT'));
   }
 
-  const emoji = passed
-    ? (stars === 3 ? '🏆' : stars === 2 ? '🥇' : '🎯')
-    : (state.hearts <= 0 ? '💔' : '📚');
-  result.appendChild(el('div', { class: 'big-emoji' }, emoji));
+  const iconName = passed
+    ? (stars === 3 ? 'trophy' : stars === 2 ? 'medal' : 'target')
+    : (state.hearts <= 0 ? 'heart-empty' : 'lightbulb');
+  result.appendChild(el('div', { class: 'big-icon-wrap ' + (passed ? 'success' : 'fail'), html: icon(iconName, { size: 76, strokeWidth: 1.8 }) }));
   result.appendChild(el('h2', {}, passed ? '잘했어!' : '괜찮아, 한 번 더!'));
   result.appendChild(el('div', { class: 'stage-cleared' },
     `정답 ${correctCount} / ${total} · 하트 ${Math.max(0,state.hearts)} 남음`));
 
   const starsEl = el('div', { class: 'stars-big' });
   for (let i = 0; i < 3; i++) {
-    starsEl.appendChild(el('span', { class: i < stars ? 'star' : 'star empty' }, '★'));
+    const starHtml = icon(i < stars ? 'star' : 'star-empty', { size: 44 });
+    starsEl.appendChild(el('span', { class: i < stars ? 'star' : 'star empty', html: starHtml }));
   }
   result.appendChild(starsEl);
 
   if (passed) {
-    result.appendChild(el('div', { class: 'reward' }, `💰 코인 +${state.coinsEarned}P 획득!`));
+    result.appendChild(el('div', { class: 'reward', html: icon('coin', { size: 16 }) + ' 코인 +' + state.coinsEarned + 'P 획득!' }));
 
     // 보물상자 (상자 클릭 시 보너스)
     if (hasChest) {
