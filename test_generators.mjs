@@ -50,8 +50,28 @@ for (const [grade, info] of Object.entries(GRADES)) {
             console.log(`NaN grade=${grade} unit=${unit.id} q=${p.q}`);
             continue;
           }
+          // MCQ: 정답이 보기 안에 있어야 함, 보기는 4개, 중복 없어야 함
+          if (p.choices) {
+            if (!Array.isArray(p.choices) || p.choices.length !== 4) {
+              issues++;
+              console.log(`MCQ BAD CHOICES (len) grade=${grade} unit=${unit.id} q="${p.q}" choices=${JSON.stringify(p.choices)}`);
+              continue;
+            }
+            const strs = p.choices.map(String);
+            if (new Set(strs).size !== 4) {
+              issues++;
+              console.log(`MCQ DUP CHOICES grade=${grade} unit=${unit.id} q="${p.q}" choices=${JSON.stringify(p.choices)}`);
+              continue;
+            }
+            if (!strs.includes(String(p.a))) {
+              issues++;
+              console.log(`MCQ NO CORRECT grade=${grade} unit=${unit.id} q="${p.q}" a=${p.a} choices=${JSON.stringify(p.choices)}`);
+              continue;
+            }
+          }
           if (examples[unit.id].length < 3 && stage <= 5) {
-            examples[unit.id].push(`[s${stage}] ${p.q}  → ${p.a}`);
+            const tag = p.choices ? ' [MCQ]' : '';
+            examples[unit.id].push(`[s${stage}]${tag} ${p.q}  → ${p.a}`);
           }
         } catch (e) {
           issues++;
