@@ -1,0 +1,6 @@
+json_key_file("../play-store-key.json")  # Google Play 서비스 계정 JSON 키 파일 경로
+package_name("com.mathquest.app")          # 앱 패키지 ID
+
+# 다른 앱에 재사용 시 위 두 줄만 바꾸면 됨
+# - json_key_file: 같은 Google Play 계정이면 재사용 가능 (하나만 발급)
+# - package_name: 앱마다 고유

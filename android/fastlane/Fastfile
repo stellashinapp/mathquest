@@ -1,0 +1,81 @@
+# Math Quest — Android Play Store 자동 배포
+# 사용법: cd android && fastlane <lane명>
+
+default_platform(:android)
+
+platform :android do
+
+  desc "릴리스 AAB 빌드 (서명 포함)"
+  lane :build do
+    gradle(task: "clean")
+    gradle(task: "bundleRelease")
+    UI.success("✅ AAB 빌드 완료: app/build/outputs/bundle/release/app-release.aab")
+  end
+
+  desc "내부 테스트 트랙으로 업로드 (가장 안전, 본인+테스터만 받음)"
+  lane :internal do
+    gradle(task: "clean bundleRelease")
+    upload_to_play_store(
+      track: 'internal',
+      aab: 'app/build/outputs/bundle/release/app-release.aab',
+      skip_upload_metadata: true,
+      skip_upload_changelogs: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true,
+      release_status: 'completed'
+    )
+    UI.success("✅ Internal track 업로드 완료. Play Console에서 테스터 추가하시면 폰에서 받을 수 있어요.")
+  end
+
+  desc "비공개 알파 트랙 (제한된 테스터)"
+  lane :alpha do
+    gradle(task: "clean bundleRelease")
+    upload_to_play_store(
+      track: 'alpha',
+      aab: 'app/build/outputs/bundle/release/app-release.aab',
+      skip_upload_metadata: true,
+      skip_upload_changelogs: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true,
+      release_status: 'completed'
+    )
+  end
+
+  desc "공개 베타 트랙"
+  lane :beta do
+    gradle(task: "clean bundleRelease")
+    upload_to_play_store(
+      track: 'beta',
+      aab: 'app/build/outputs/bundle/release/app-release.aab',
+      skip_upload_metadata: true,
+      skip_upload_changelogs: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true,
+      release_status: 'completed'
+    )
+  end
+
+  desc "프로덕션 릴리스 (실제 출시 — 신중!)"
+  lane :production do
+    gradle(task: "clean bundleRelease")
+    upload_to_play_store(
+      track: 'production',
+      aab: 'app/build/outputs/bundle/release/app-release.aab',
+      skip_upload_metadata: true,
+      skip_upload_changelogs: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true,
+      release_status: 'completed'
+    )
+  end
+
+  desc "버전 코드 자동 증가 (이미 동일 버전이 업로드돼있을 때)"
+  lane :bump_version do
+    path = '../app/build.gradle'
+    s = File.read(path)
+    new_code = s[/versionCode (\d+)/, 1].to_i + 1
+    s.sub!(/versionCode \d+/, "versionCode #{new_code}")
+    File.write(path, s)
+    UI.success("✅ versionCode → #{new_code}")
+  end
+end

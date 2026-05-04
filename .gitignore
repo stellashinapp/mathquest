@@ -22,6 +22,12 @@ android/app/*.keystore
 android/app/*.jks
 *.keystore.properties
 
+# ⚠️ Google Play 서비스 계정 JSON 키 (fastlane용) — 절대 커밋 X
+play-store-key.json
+*-play-key.json
+android/fastlane/report.xml
+android/fastlane/Preview.html
+
 # IDE / OS
 .vscode/
 .idea/
