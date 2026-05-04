@@ -522,6 +522,15 @@
     font-size: 11px; color: var(--text-muted); margin-bottom: 8px;
     font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
   }
+
+  /* 문제용 시각 자료 (도형/분수/시계 등) */
+  .problem-visual {
+    width: 180px; max-width: 60%;
+    margin: 0 auto 14px;
+    display: flex; align-items: center; justify-content: center;
+    filter: drop-shadow(0 4px 12px rgba(99, 102, 241, 0.15));
+  }
+  .problem-visual svg { width: 100%; height: auto; display: block; }
   .q-text {
     /* 단일 사이즈 — 짧은 식이든 긴 문장제든 같은 크기로 통일 */
     font-size: 26px;
@@ -1344,24 +1353,22 @@ const GRADES = {
           ];
           if (stage <= 3) {
             const s = pick(shapes.slice(0, 2));
-            return { q: `${s.name}의 변은 몇 개?`, a: s.sides };
+            return { q: `이 도형의 변은 몇 개?`, a: s.sides, visual: { type: 'polygon', n: s.sides } };
           }
           if (stage <= 6) {
             const s = pick(shapes.slice(0, 4));
             const prop = pick(["변", "꼭짓점"]);
-            return { q: `${s.name}의 ${prop}은 몇 개?`, a: s.sides };
+            return { q: `이 도형의 ${prop}은 몇 개?`, a: s.sides, visual: { type: 'polygon', n: s.sides } };
           }
           if (stage <= 9) {
             const s = pick(shapes);
             const prop = pick(["변", "꼭짓점"]);
-            return { q: `${s.name}의 ${prop}의 수는?`, a: s.sides };
+            return { q: `이 도형의 ${prop}의 수는?`, a: s.sides, visual: { type: 'polygon', n: s.sides } };
           }
           if (stage <= 12) {
-            // 합 문제: 두 도형의 변의 수 합
             const s1 = pick(shapes), s2 = pick(shapes);
             return { q: `${s1.name}과 ${s2.name}의 변의 수의 합은?`, a: s1.sides + s2.sides };
           }
-          // 차 문제
           const s1 = pick(shapes.slice(2)), s2 = pick(shapes.slice(0, 2));
           return { q: `${s1.name}의 변은 ${s2.name}보다 몇 개 더 많을까?`, a: s1.sides - s2.sides };
         }
@@ -1476,6 +1483,14 @@ const GRADES = {
               const h = rand(1, 8);
               return { q: `오전 ${h}시에서 2시간 후는 오전 몇 시?`, a: h + 2 };
             },
+            () => {
+              const h = rand(1, 12);
+              return { q: `시계가 가리키는 시각은 몇 시?`, a: h, visual: { type: 'clock', h, m: 0 } };
+            },
+            () => {
+              const h = rand(1, 12), m = pick([15, 30, 45]);
+              return { q: `시계가 가리키는 분은?`, a: m, visual: { type: 'clock', h, m } };
+            },
           ];
           return pick(forms)();
         }
@@ -1520,7 +1535,7 @@ const GRADES = {
           ];
           const s = pick(shapes);
           const p = pick(["변의 수", "꼭짓점의 수", "각의 수"]);
-          return { q: `${s.name}의 ${p}는?`, a: s.sides };
+          return { q: `이 도형의 ${p}는?`, a: s.sides, visual: { type: 'polygon', n: s.sides } };
         }
       },
     ]
@@ -1568,17 +1583,17 @@ const GRADES = {
             () => {
               const d = rand(3, 9);
               const n = rand(1, d - 1);
-              return { q: `전체를 똑같이 ${d}로 나눈 것 중 ${n}은 분수로? (a/b로 입력)`, a: `${n}/${d}` };
+              return { q: `색칠된 부분을 분수로? (a/b로 입력)`, a: `${n}/${d}`, visual: { type: 'fraction', n, d } };
             },
             () => {
               const d = rand(4, 8);
               const n = rand(1, d - 1);
-              return { q: `${n}/${d}에서 분모는?`, a: d };
+              return { q: `${n}/${d}에서 분모는?`, a: d, visual: { type: 'fractionBar', n, d } };
             },
             () => {
               const d = rand(4, 8);
               const n = rand(1, d - 1);
-              return { q: `${n}/${d}에서 분자는?`, a: n };
+              return { q: `${n}/${d}에서 분자는?`, a: n, visual: { type: 'fractionBar', n, d } };
             },
           ];
           return pick(forms)();
@@ -1611,15 +1626,15 @@ const GRADES = {
           const forms = [
             () => {
               const s = rand(3, 3 + stage * 2);
-              return { q: `한 변이 ${s}cm인 정사각형의 둘레는? (cm)`, a: s * 4 };
+              return { q: `정사각형의 둘레는? (cm)`, a: s * 4, visual: { type: 'square', side: s } };
             },
             () => {
               const w = rand(3, 10), h = rand(3, 10);
-              return { q: `가로 ${w}cm, 세로 ${h}cm 직사각형의 둘레는? (cm)`, a: (w + h) * 2 };
+              return { q: `직사각형의 둘레는? (cm)`, a: (w + h) * 2, visual: { type: 'rectangle', w, h } };
             },
             () => {
               const s = rand(3, 9);
-              return { q: `한 변이 ${s}cm인 정삼각형의 둘레는? (cm)`, a: s * 3 };
+              return { q: `정삼각형의 둘레는? (cm)`, a: s * 3, visual: { type: 'triangle', side: s } };
             },
           ];
           return pick(forms)();
@@ -1917,15 +1932,15 @@ const GRADES = {
           const forms = [
             () => {
               const w = rand(3, 12), h = rand(3, 12);
-              return { q: `가로 ${w}, 세로 ${h}인 직사각형의 넓이는? (단위 없이 숫자만)`, a: w * h };
+              return { q: `직사각형의 넓이는?`, a: w * h, visual: { type: 'rectangle', w, h, unit: '' } };
             },
             () => {
-              const b = rand(4, 12), h = rand(2, 10) * 2; // keep /2 clean
-              return { q: `밑변 ${b}, 높이 ${h}인 삼각형의 넓이는?`, a: b * h / 2 };
+              const b = rand(4, 12), h = rand(2, 10) * 2;
+              return { q: `삼각형의 넓이는?`, a: b * h / 2, visual: { type: 'triangleBH', b, h, unit: '' } };
             },
             () => {
-              const a = rand(3, 9), b = rand(3, 9), h = rand(2, 8) * 2;
-              return { q: `평행한 두 변이 ${a}, ${b}이고 높이가 ${h}인 사다리꼴의 넓이는?`, a: (a + b) * h / 2 };
+              const top = rand(3, 9), bot = rand(top + 2, 12), hh = rand(2, 8) * 2;
+              return { q: `사다리꼴의 넓이는?`, a: (top + bot) * hh / 2, visual: { type: 'trapezoid', top, bot, h: hh, unit: '' } };
             },
           ];
           return pick(forms)();
@@ -2033,15 +2048,15 @@ const GRADES = {
           const forms = [
             () => {
               const r = rand(2, Math.min(12, 3 + stage));
-              return { q: `반지름 ${r}cm인 원의 둘레는? (π=3.14, cm)`, a: roundDec(2 * PI * r, 2) };
+              return { q: `원의 둘레는? (π=3.14)`, a: roundDec(2 * PI * r, 2), visual: { type: 'circle', r } };
             },
             () => {
               const r = rand(2, Math.min(12, 3 + stage));
-              return { q: `반지름 ${r}cm인 원의 넓이는? (π=3.14)`, a: roundDec(PI * r * r, 2) };
+              return { q: `원의 넓이는? (π=3.14)`, a: roundDec(PI * r * r, 2), visual: { type: 'circle', r } };
             },
             () => {
               const d = rand(4, Math.min(20, 6 + stage * 2));
-              return { q: `지름 ${d}cm인 원의 둘레는? (π=3.14, cm)`, a: roundDec(PI * d, 2) };
+              return { q: `원의 둘레는? (π=3.14)`, a: roundDec(PI * d, 2), visual: { type: 'circle', d } };
             },
           ];
           return pick(forms)();
@@ -2052,16 +2067,16 @@ const GRADES = {
         generate(stage) {
           const forms = [
             () => {
-              const a = rand(2, 5 + stage), b = rand(2, 5 + stage), c = rand(2, 5 + stage);
-              return { q: `가로 ${a}, 세로 ${b}, 높이 ${c}인 직육면체의 부피는?`, a: a * b * c };
+              const w = rand(2, 5 + stage), h = rand(2, 5 + stage), d = rand(2, 5 + stage);
+              return { q: `직육면체의 부피는?`, a: w * h * d, visual: { type: 'cuboid', w, h, d } };
             },
             () => {
               const s = rand(2, 3 + stage);
-              return { q: `한 모서리가 ${s}인 정육면체의 부피는?`, a: s * s * s };
+              return { q: `정육면체의 부피는?`, a: s * s * s, visual: { type: 'cube', side: s } };
             },
             () => {
-              const a = rand(2, 6), b = rand(2, 6), c = rand(2, 6);
-              return { q: `가로 ${a}, 세로 ${b}, 높이 ${c}인 직육면체의 겉넓이는?`, a: 2 * (a*b + b*c + a*c) };
+              const w = rand(2, 6), h = rand(2, 6), d = rand(2, 6);
+              return { q: `직육면체의 겉넓이는?`, a: 2 * (w*h + h*d + w*d), visual: { type: 'cuboid', w, h, d } };
             },
           ];
           return pick(forms)();
@@ -2845,6 +2860,7 @@ function screenPlay(state) {
 
   const problemArea = el('div', { class: 'problem-area' + (state.hearts === 1 ? ' danger' : '') + (state.isBoss ? ' boss' : ''), id: 'problemArea' },
     el('div', { class: 'q-stage' }, `문제 ${state.idx + 1} / ${state.problems.length}`),
+    current.visual ? el('div', { class: 'problem-visual', html: renderVisual(current.visual) }) : null,
     el('div', { class: 'q-text' + (current.q.length > 22 ? ' small' : ''), html: formatMath(current.q) }),
     el('div', { class: 'answer-box', id: 'ansBox' }, '?'),
     el('div', { class: 'feedback', id: 'feedback' })
@@ -2950,6 +2966,207 @@ function icon(name, opts = {}) {
   const size = opts.size || 22;
   const sw = opts.strokeWidth || 2;
   return `<svg class="ico" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round">${inner}</svg>`;
+}
+
+// =============================================================
+// 시각 자료 (도형/분수/시계 등) — 인라인 SVG 자동 생성
+// =============================================================
+const VISUAL = {
+  // 정사각형 + 한 변 라벨
+  square: ({ side, unit = 'cm' }) => `
+    <svg viewBox="0 0 140 130" xmlns="http://www.w3.org/2000/svg">
+      <rect x="30" y="20" width="80" height="80" fill="#eef0ff" stroke="#6366f1" stroke-width="3" rx="4"/>
+      <text x="70" y="118" text-anchor="middle" font-size="14" fill="#1a1d2e" font-weight="700" font-family="system-ui">${side}${unit}</text>
+    </svg>`,
+  // 직사각형 + 가로/세로 라벨
+  rectangle: ({ w, h, unit = 'cm' }) => {
+    // 비율 유지하며 그리기 (긴 변을 90px로)
+    const max = Math.max(w, h);
+    const rw = (w / max) * 90;
+    const rh = (h / max) * 90;
+    const x = (140 - rw) / 2;
+    const y = (130 - rh) / 2 - 5;
+    return `
+    <svg viewBox="0 0 140 130" xmlns="http://www.w3.org/2000/svg">
+      <rect x="${x}" y="${y}" width="${rw}" height="${rh}" fill="#eef0ff" stroke="#6366f1" stroke-width="3" rx="4"/>
+      <text x="70" y="${y + rh + 18}" text-anchor="middle" font-size="13" fill="#1a1d2e" font-weight="700" font-family="system-ui">가로 ${w}${unit}</text>
+      <text x="${x + rw + 5}" y="${y + rh / 2 + 4}" text-anchor="start" font-size="13" fill="#1a1d2e" font-weight="700" font-family="system-ui">세로 ${h}${unit}</text>
+    </svg>`;
+  },
+  // 정삼각형 + 한 변 라벨
+  triangle: ({ side, unit = 'cm' }) => `
+    <svg viewBox="0 0 140 130" xmlns="http://www.w3.org/2000/svg">
+      <polygon points="70,20 25,95 115,95" fill="#eef0ff" stroke="#6366f1" stroke-width="3" stroke-linejoin="round"/>
+      <text x="70" y="118" text-anchor="middle" font-size="14" fill="#1a1d2e" font-weight="700" font-family="system-ui">한 변 ${side}${unit}</text>
+    </svg>`,
+  // 일반 삼각형 (밑변 + 높이)
+  triangleBH: ({ b, h, unit = 'cm' }) => `
+    <svg viewBox="0 0 160 140" xmlns="http://www.w3.org/2000/svg">
+      <polygon points="80,15 25,105 135,105" fill="#eef0ff" stroke="#6366f1" stroke-width="3" stroke-linejoin="round"/>
+      <line x1="80" y1="15" x2="80" y2="105" stroke="#f59e0b" stroke-width="2" stroke-dasharray="4,3"/>
+      <text x="80" y="125" text-anchor="middle" font-size="13" fill="#1a1d2e" font-weight="700" font-family="system-ui">밑변 ${b}${unit}</text>
+      <text x="86" y="62" text-anchor="start" font-size="12" fill="#f59e0b" font-weight="700" font-family="system-ui">높이 ${h}${unit}</text>
+    </svg>`,
+  // 사다리꼴
+  trapezoid: ({ top, bot, h, unit = 'cm' }) => `
+    <svg viewBox="0 0 160 140" xmlns="http://www.w3.org/2000/svg">
+      <polygon points="50,20 110,20 135,100 25,100" fill="#eef0ff" stroke="#6366f1" stroke-width="3" stroke-linejoin="round"/>
+      <line x1="80" y1="20" x2="80" y2="100" stroke="#f59e0b" stroke-width="2" stroke-dasharray="4,3"/>
+      <text x="80" y="14" text-anchor="middle" font-size="12" fill="#1a1d2e" font-weight="700" font-family="system-ui">윗변 ${top}${unit}</text>
+      <text x="80" y="118" text-anchor="middle" font-size="12" fill="#1a1d2e" font-weight="700" font-family="system-ui">아랫변 ${bot}${unit}</text>
+      <text x="86" y="62" text-anchor="start" font-size="11" fill="#f59e0b" font-weight="700" font-family="system-ui">높이 ${h}${unit}</text>
+    </svg>`,
+  // 원 (반지름 또는 지름 라벨)
+  circle: ({ r, d, unit = 'cm' }) => {
+    const radius = 50;
+    const labelText = d != null ? `지름 ${d}${unit}` : `반지름 ${r}${unit}`;
+    return `
+    <svg viewBox="0 0 140 130" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="70" cy="60" r="${radius}" fill="#eef0ff" stroke="#6366f1" stroke-width="3"/>
+      <circle cx="70" cy="60" r="2.5" fill="#6366f1"/>
+      ${d != null
+        ? `<line x1="20" y1="60" x2="120" y2="60" stroke="#f59e0b" stroke-width="2"/>`
+        : `<line x1="70" y1="60" x2="120" y2="60" stroke="#f59e0b" stroke-width="2"/>`}
+      <text x="70" y="120" text-anchor="middle" font-size="13" fill="#1a1d2e" font-weight="700" font-family="system-ui">${labelText}</text>
+    </svg>`;
+  },
+  // 정n각형 (변/꼭짓점 표시)
+  polygon: ({ n }) => {
+    const cx = 70, cy = 60, R = 45;
+    const points = [];
+    for (let i = 0; i < n; i++) {
+      const angle = -Math.PI / 2 + (i * 2 * Math.PI / n);
+      const x = cx + R * Math.cos(angle);
+      const y = cy + R * Math.sin(angle);
+      points.push(`${x.toFixed(1)},${y.toFixed(1)}`);
+    }
+    const vertices = points.map(p => {
+      const [x, y] = p.split(',');
+      return `<circle cx="${x}" cy="${y}" r="3" fill="#f59e0b"/>`;
+    }).join('');
+    return `
+    <svg viewBox="0 0 140 130" xmlns="http://www.w3.org/2000/svg">
+      <polygon points="${points.join(' ')}" fill="#eef0ff" stroke="#6366f1" stroke-width="3" stroke-linejoin="round"/>
+      ${vertices}
+    </svg>`;
+  },
+  // 분수 파이 (numerator / denominator 색칠)
+  fraction: ({ n, d }) => {
+    const cx = 70, cy = 60, R = 45;
+    const slices = [];
+    for (let i = 0; i < d; i++) {
+      const a1 = -Math.PI / 2 + (i * 2 * Math.PI / d);
+      const a2 = -Math.PI / 2 + ((i + 1) * 2 * Math.PI / d);
+      const x1 = cx + R * Math.cos(a1), y1 = cy + R * Math.sin(a1);
+      const x2 = cx + R * Math.cos(a2), y2 = cy + R * Math.sin(a2);
+      const large = (a2 - a1) > Math.PI ? 1 : 0;
+      const fill = i < n ? '#6366f1' : '#eef0ff';
+      slices.push(`<path d="M ${cx} ${cy} L ${x1.toFixed(1)} ${y1.toFixed(1)} A ${R} ${R} 0 ${large} 1 ${x2.toFixed(1)} ${y2.toFixed(1)} Z" fill="${fill}" stroke="white" stroke-width="2"/>`);
+    }
+    return `
+    <svg viewBox="0 0 140 130" xmlns="http://www.w3.org/2000/svg">
+      ${slices.join('')}
+      <circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="#6366f1" stroke-width="2.5"/>
+      <text x="70" y="120" text-anchor="middle" font-size="13" fill="#1a1d2e" font-weight="700" font-family="system-ui">${n} / ${d} 색칠됨</text>
+    </svg>`;
+  },
+  // 분수 막대 (가로 직사각형을 d 등분)
+  fractionBar: ({ n, d }) => {
+    const total = 120, h = 30;
+    const each = total / d;
+    const cells = [];
+    for (let i = 0; i < d; i++) {
+      const x = 10 + i * each;
+      const fill = i < n ? '#6366f1' : '#eef0ff';
+      cells.push(`<rect x="${x}" y="35" width="${each}" height="${h}" fill="${fill}" stroke="#6366f1" stroke-width="2"/>`);
+    }
+    return `
+    <svg viewBox="0 0 140 100" xmlns="http://www.w3.org/2000/svg">
+      ${cells.join('')}
+      <text x="70" y="92" text-anchor="middle" font-size="12" fill="#1a1d2e" font-weight="700" font-family="system-ui">${d}등분 중 ${n}칸</text>
+    </svg>`;
+  },
+  // 시계 (시간/분 표시)
+  clock: ({ h, m }) => {
+    const cx = 70, cy = 70, R = 50;
+    // hour hand: 12시 = 위, 시계방향. 1시간 = 30°, 1분당 추가 0.5°
+    const hourAngle = ((h % 12) * 30 + m * 0.5 - 90) * Math.PI / 180;
+    const minAngle = (m * 6 - 90) * Math.PI / 180;
+    const hx = cx + 28 * Math.cos(hourAngle), hy = cy + 28 * Math.sin(hourAngle);
+    const mx = cx + 42 * Math.cos(minAngle), my = cy + 42 * Math.sin(minAngle);
+    // 시각 마커
+    const ticks = [];
+    for (let i = 0; i < 12; i++) {
+      const a = (i * 30 - 90) * Math.PI / 180;
+      const x1 = cx + (R - 4) * Math.cos(a), y1 = cy + (R - 4) * Math.sin(a);
+      const x2 = cx + R * Math.cos(a), y2 = cy + R * Math.sin(a);
+      ticks.push(`<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="#6366f1" stroke-width="2"/>`);
+    }
+    // 12, 3, 6, 9 숫자
+    const nums = [];
+    [[12, 0, -30], [3, 30, 0], [6, 0, 30], [9, -30, 0]].forEach(([n, dx, dy]) => {
+      nums.push(`<text x="${cx + dx * 1.2}" y="${cy + dy * 1.2 + 5}" text-anchor="middle" font-size="11" fill="#6366f1" font-weight="800" font-family="system-ui">${n}</text>`);
+    });
+    return `
+    <svg viewBox="0 0 140 140" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="${cx}" cy="${cy}" r="${R}" fill="#eef0ff" stroke="#6366f1" stroke-width="3"/>
+      ${ticks.join('')}
+      ${nums.join('')}
+      <line x1="${cx}" y1="${cy}" x2="${hx.toFixed(1)}" y2="${hy.toFixed(1)}" stroke="#1a1d2e" stroke-width="4" stroke-linecap="round"/>
+      <line x1="${cx}" y1="${cy}" x2="${mx.toFixed(1)}" y2="${my.toFixed(1)}" stroke="#f59e0b" stroke-width="3" stroke-linecap="round"/>
+      <circle cx="${cx}" cy="${cy}" r="3" fill="#1a1d2e"/>
+    </svg>`;
+  },
+  // 직육면체 (3D 비스듬한 모습)
+  cuboid: ({ w, h, d, unit = '' }) => {
+    return `
+    <svg viewBox="0 0 160 130" xmlns="http://www.w3.org/2000/svg">
+      <!-- 뒷면 -->
+      <polygon points="40,20 130,20 130,75 40,75" fill="#dde0ff" stroke="#6366f1" stroke-width="2.5"/>
+      <!-- 윗면 -->
+      <polygon points="20,40 40,20 130,20 110,40" fill="#c8cdff" stroke="#6366f1" stroke-width="2.5"/>
+      <!-- 앞면 -->
+      <polygon points="20,40 110,40 110,95 20,95" fill="#eef0ff" stroke="#6366f1" stroke-width="2.5"/>
+      <!-- 라벨 -->
+      <text x="65" y="115" text-anchor="middle" font-size="11" fill="#1a1d2e" font-weight="700" font-family="system-ui">가로 ${w}${unit}</text>
+      <text x="120" y="70" text-anchor="start" font-size="11" fill="#1a1d2e" font-weight="700" font-family="system-ui">세로 ${h}${unit}</text>
+      <text x="142" y="35" text-anchor="middle" font-size="11" fill="#1a1d2e" font-weight="700" font-family="system-ui">높이 ${d}${unit}</text>
+    </svg>`;
+  },
+  // 정육면체
+  cube: ({ side, unit = '' }) => {
+    return `
+    <svg viewBox="0 0 140 130" xmlns="http://www.w3.org/2000/svg">
+      <polygon points="40,30 110,30 110,90 40,90" fill="#dde0ff" stroke="#6366f1" stroke-width="2.5"/>
+      <polygon points="20,50 40,30 110,30 90,50" fill="#c8cdff" stroke="#6366f1" stroke-width="2.5"/>
+      <polygon points="20,50 90,50 90,110 20,110" fill="#eef0ff" stroke="#6366f1" stroke-width="2.5"/>
+      <text x="70" y="125" text-anchor="middle" font-size="12" fill="#1a1d2e" font-weight="700" font-family="system-ui">한 모서리 ${side}${unit}</text>
+    </svg>`;
+  },
+  // 점/사물 카운트 (1학년 수 세기)
+  dots: ({ count, label }) => {
+    const cells = [];
+    const cols = Math.min(5, count);
+    const rows = Math.ceil(count / cols);
+    const cellSize = 24;
+    const startX = (140 - cols * cellSize) / 2;
+    const startY = (100 - rows * cellSize) / 2;
+    for (let i = 0; i < count; i++) {
+      const r = Math.floor(i / cols);
+      const c = i % cols;
+      cells.push(`<circle cx="${startX + c * cellSize + cellSize/2}" cy="${startY + r * cellSize + cellSize/2}" r="9" fill="#f59e0b" stroke="#d97706" stroke-width="1.5"/>`);
+    }
+    return `
+    <svg viewBox="0 0 140 110" xmlns="http://www.w3.org/2000/svg">
+      ${cells.join('')}
+      ${label ? `<text x="70" y="105" text-anchor="middle" font-size="11" fill="#1a1d2e" font-weight="700" font-family="system-ui">${label}</text>` : ''}
+    </svg>`;
+  },
+};
+
+function renderVisual(visual) {
+  if (!visual || !VISUAL[visual.type]) return '';
+  return VISUAL[visual.type](visual);
 }
 
 // === Math Quest 로고 (M + 배경 버블 데코) ===
