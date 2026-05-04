@@ -632,6 +632,30 @@
     background: var(--surface-soft);
     color: var(--text-soft);
   }
+  .key.span3 { grid-column: span 3; }
+  .key.frac-key {
+    background: var(--primary-soft);
+    color: var(--primary);
+    font-size: 30px;
+    font-weight: 900;
+  }
+
+  /* 분수 답 박스 — 분자/분모 분리 표시 */
+  .answer-box .frac {
+    display: inline-flex; flex-direction: column; align-items: center;
+    line-height: 1.0;
+    font-size: 28px;
+  }
+  .answer-box .frac .num {
+    border-bottom: 2.5px solid currentColor;
+    padding: 0 14px 2px;
+    min-width: 24px; text-align: center;
+  }
+  .answer-box .frac .den {
+    padding: 4px 14px 0;
+    min-width: 24px; text-align: center;
+  }
+  .answer-box.fraction { min-height: 78px; padding: 8px 22px; }
 
   /* Result */
   .result {
@@ -1143,6 +1167,14 @@ function checkAnswer(userStr, expected) {
   if (!e) return false;
   // For fraction expected, accept any equivalent fraction OR the decimal value (with tolerance)
   return Math.abs(u.value - e.value) < 1e-6;
+}
+
+// 답의 형식 판별 — 키패드/입력 UI 결정에 사용
+function answerKind(a) {
+  const s = String(a);
+  if (s.includes('/')) return 'fraction';
+  if (s.includes('.')) return 'decimal';
+  return 'integer';
 }
 
 // ============================================================
@@ -2858,25 +2890,52 @@ function screenPlay(state) {
     }, state.timeLimit * 1000);
   }
 
+  const kind = answerKind(current.a);
+  const ansBox = el('div', { class: 'answer-box ' + kind, id: 'ansBox', html: renderAnswerBox('', kind) });
+
   const problemArea = el('div', { class: 'problem-area' + (state.hearts === 1 ? ' danger' : '') + (state.isBoss ? ' boss' : ''), id: 'problemArea' },
     el('div', { class: 'q-stage' }, `문제 ${state.idx + 1} / ${state.problems.length}`),
     current.visual ? el('div', { class: 'problem-visual', html: renderVisual(current.visual) }) : null,
     el('div', { class: 'q-text' + (current.q.length > 22 ? ' small' : ''), html: formatMath(current.q) }),
-    el('div', { class: 'answer-box', id: 'ansBox' }, '?'),
+    ansBox,
     el('div', { class: 'feedback', id: 'feedback' })
   );
   play.appendChild(problemArea);
 
-  const keypad = el('div', { class: 'keypad' });
-  const keys = ['1','2','3','4','5','6','7','8','9','.','0','/'];
-  keys.forEach(k => {
-    const btn = el('button', { class: 'key' + (k === '.' || k === '/' ? ' secondary' : ''),
-      onclick: () => pressKey(k, state) }, k);
-    keypad.appendChild(btn);
-  });
-  keypad.appendChild(el('button', { class: 'key secondary', onclick: () => pressKey('DEL', state) }, '지우기'));
-  keypad.appendChild(el('button', { class: 'key', onclick: () => pressKey('SIGN', state) }, '±'));
-  keypad.appendChild(el('button', { class: 'key action', onclick: () => submitAnswer(state) }, '확인'));
+  const keypad = el('div', { class: 'keypad ' + kind });
+  const numRow = (a, b, c) => [a, b, c];
+  const layout = [
+    numRow('1', '2', '3'),
+    numRow('4', '5', '6'),
+    numRow('7', '8', '9'),
+  ];
+  if (kind === 'integer') {
+    layout.push([
+      { k: 'DEL', label: '지우기', cls: 'secondary' },
+      '0',
+      { k: 'OK',  label: '확인', cls: 'action' },
+    ]);
+  } else if (kind === 'decimal') {
+    layout.push([
+      { k: 'DEL', label: '지우기', cls: 'secondary' },
+      '0',
+      '.',
+    ]);
+    layout.push([{ k: 'OK', label: '확인', cls: 'action span3' }]);
+  } else { // fraction
+    layout.push([
+      { k: 'DEL', label: '지우기', cls: 'secondary' },
+      '0',
+      { k: '/',   label: '⁄', cls: 'frac-key' },
+    ]);
+    layout.push([{ k: 'OK', label: '확인', cls: 'action span3' }]);
+  }
+  layout.forEach(row => row.forEach(item => {
+    const it = typeof item === 'string' ? { k: item, label: item } : item;
+    const cls = 'key' + (it.cls ? ' ' + it.cls : '');
+    const onclick = it.k === 'OK' ? () => submitAnswer(state) : () => pressKey(it.k, state);
+    keypad.appendChild(el('button', { class: cls, onclick }, it.label));
+  }));
   play.appendChild(keypad);
 
   screen.append(topbar, play);
@@ -2886,19 +2945,38 @@ function screenPlay(state) {
 function pressKey(k, state) {
   const box = document.getElementById('ansBox');
   if (!box) return;
+  const kind = state && state.problems[state.idx] ? answerKind(state.problems[state.idx].a) : 'integer';
   if (k === 'DEL') {
     currentAnswer = currentAnswer.slice(0, -1);
-  } else if (k === 'SIGN') {
-    if (currentAnswer.startsWith('-')) currentAnswer = currentAnswer.slice(1);
-    else currentAnswer = '-' + currentAnswer;
   } else {
     if (currentAnswer.length >= 10) return;
     if (k === '.' && currentAnswer.includes('.')) return;
     if (k === '/' && currentAnswer.includes('/')) return;
+    if (k === '/' && currentAnswer === '') return; // 분모만 입력 방지
     currentAnswer += k;
   }
-  box.textContent = currentAnswer === '' ? '?' : currentAnswer;
+  box.innerHTML = renderAnswerBox(currentAnswer, kind);
   box.classList.remove('correct', 'wrong');
+}
+
+// 답 박스 렌더링 — 분수일 때 분자/분모 분리 표시
+function renderAnswerBox(s, kind) {
+  if (s === '') {
+    if (kind === 'fraction') {
+      return `<span class="frac"><span class="num">?</span><span class="den">?</span></span>`;
+    }
+    return '?';
+  }
+  if (kind === 'fraction') {
+    const slash = s.indexOf('/');
+    if (slash === -1) {
+      return `<span class="frac"><span class="num">${s}</span><span class="den">?</span></span>`;
+    }
+    const num = s.slice(0, slash) || '?';
+    const den = s.slice(slash + 1) || '?';
+    return `<span class="frac"><span class="num">${num}</span><span class="den">${den}</span></span>`;
+  }
+  return s;
 }
 
 // =============================================================
