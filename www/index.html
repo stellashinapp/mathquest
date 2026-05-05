@@ -303,6 +303,45 @@
     line-height: 1.4;
   }
   .daily-card.done .daily-desc { color: var(--text-muted); }
+  /* 약점 단원 / 복습 큐 추천 카드 */
+  .recommend-card {
+    display: flex; align-items: center; gap: 14px;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    padding: 14px 18px; border-radius: var(--radius-lg);
+    margin-bottom: 14px; cursor: pointer;
+    box-shadow: var(--shadow-sm);
+    transition: transform .12s, border-color .15s, background .15s;
+  }
+  .recommend-card:active { transform: scale(0.98); }
+  .recommend-card.weak { border-color: var(--danger); background: linear-gradient(135deg, #fff5f5 0%, #ffe5e5 100%); }
+  .recommend-card.review { border-color: var(--primary); background: linear-gradient(135deg, #f3f4ff 0%, #e8e9ff 100%); }
+  .recommend-card .rec-icon {
+    width: 40px; height: 40px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .recommend-card.weak .rec-icon { background: var(--danger-soft); color: var(--danger); }
+  .recommend-card.review .rec-icon { background: var(--primary-soft); color: var(--primary); }
+  .recommend-card .rec-text { flex: 1; min-width: 0; }
+  .recommend-card .rec-label {
+    font-size: 14px; font-weight: 800;
+    color: var(--text); letter-spacing: -0.3px;
+    margin-bottom: 2px;
+  }
+  .recommend-card .rec-desc {
+    font-size: 12px; font-weight: 600;
+    color: var(--text-muted); letter-spacing: -0.1px;
+  }
+  .recommend-card .rec-arrow {
+    font-size: 14px; font-weight: 900;
+    color: var(--text-muted);
+    flex-shrink: 0;
+  }
+  .recommend-card.weak .rec-arrow { color: var(--danger); }
+  .recommend-card.review .rec-arrow { color: var(--primary); }
+
   .daily-arrow {
     font-size: 18px; font-weight: 900;
     color: #fff; position: relative;
@@ -2479,6 +2518,7 @@ function loadSave() {
     coins: 0, units: {}, badges: [], muted: false,
     lastPlayDate: '', streak: 0,
     dailyChallenge: { date: '', completed: false }, // 오늘 데일리 챌린지 완료 여부
+    reviewQueue: [], // 오답 복습 큐: { unitId, q, a, choices, visual, attempts, addedAt }
     stats: {
       correctCount: 0, maxCombo: 0, perfectStages: 0, totalStars: 0,
       chestsOpened: 0, gradesPlayed: [],
@@ -2503,11 +2543,85 @@ function saveSave(s) {
 let SAVE = loadSave();
 
 function getUnitProgress(unitId) {
-  return SAVE.units[unitId] || { stage: 1, stars: 0 };
+  return SAVE.units[unitId] || { stage: 1, stars: 0, attempts: 0, correct: 0, consecutiveFails: 0 };
 }
 function setUnitProgress(unitId, data) {
   SAVE.units[unitId] = { ...getUnitProgress(unitId), ...data };
   saveSave(SAVE);
+}
+
+// ---------- 격려 메시지 (정답 시) ----------
+function pickEncouragement(combo, elapsedSec) {
+  // 빠른 정답
+  if (elapsedSec < 3 && combo >= 3) return '⚡ 번개 같아!';
+  if (elapsedSec < 3) return '⚡ 빠르네!';
+  // 콤보별 메시지
+  if (combo >= 10) return '🔥 10연속 대단해!';
+  if (combo >= 7) return '🔥 멈출 수가 없어!';
+  if (combo >= 5) return '✨ 5연속 정답!';
+  if (combo >= 3) return '👏 잘하고 있어!';
+  // 일반 정답 — 다양한 메시지 중 랜덤
+  const msgs = ['🎉 정답!', '👍 좋아요!', '✅ 맞았어요!', '⭐ 완벽해!', '🌟 잘했어!'];
+  return msgs[Math.floor(Math.random() * msgs.length)];
+}
+
+// ---------- 오답 복습 큐 (간격 반복 학습) ----------
+const REVIEW_QUEUE_MAX = 30;
+function addToReviewQueue(unitId, problem) {
+  if (!problem || !problem.q || problem.a == null) return;
+  // 중복 제거 (같은 단원·질문·답·시각자료)
+  const key = unitId + '|' + problem.q + '|' + String(problem.a);
+  SAVE.reviewQueue = SAVE.reviewQueue.filter(r =>
+    (r.unitId + '|' + r.q + '|' + String(r.a)) !== key);
+  SAVE.reviewQueue.push({
+    unitId, q: problem.q, a: problem.a,
+    choices: problem.choices || null,
+    visual: problem.visual || null,
+    attempts: 0, addedAt: Date.now(),
+  });
+  // 큐 크기 제한 (오래된 것부터 제거)
+  while (SAVE.reviewQueue.length > REVIEW_QUEUE_MAX) SAVE.reviewQueue.shift();
+  saveSave(SAVE);
+}
+function takeReviewProblems(unitId, n) {
+  // 같은 단원의 큐 문제를 최대 n개 꺼냄 (큐에선 제거하지 않음 — 정답 시 별도 처리)
+  const items = SAVE.reviewQueue.filter(r => r.unitId === unitId).slice(0, n);
+  return items.map(r => ({
+    q: r.q, a: r.a,
+    choices: r.choices, visual: r.visual,
+    __review: true,  // 마커: 복습 문제임을 식별
+  }));
+}
+function markReviewSolved(unitId, problem) {
+  // 정답 시: attempts++, 3회 이상 통과면 큐에서 제거
+  const key = unitId + '|' + problem.q + '|' + String(problem.a);
+  const idx = SAVE.reviewQueue.findIndex(r =>
+    (r.unitId + '|' + r.q + '|' + String(r.a)) === key);
+  if (idx === -1) return;
+  SAVE.reviewQueue[idx].attempts = (SAVE.reviewQueue[idx].attempts || 0) + 1;
+  if (SAVE.reviewQueue[idx].attempts >= 3) SAVE.reviewQueue.splice(idx, 1);
+  saveSave(SAVE);
+}
+
+// ---------- 단원별 정답률 / 약점 단원 추천 ----------
+function getUnitAccuracy(unitId) {
+  const p = getUnitProgress(unitId);
+  if (!p.attempts) return null;
+  return p.correct / p.attempts;
+}
+function getWeakUnit() {
+  // 한 번 이상 풀어봤지만 정답률이 낮은 단원 (50회 미만 시도면 미숙으로 간주)
+  let worst = null;
+  for (const [grade, info] of Object.entries(GRADES)) {
+    for (const unit of info.units) {
+      const p = getUnitProgress(unit.id);
+      if (!p.attempts || p.attempts < 5) continue;
+      const acc = p.correct / p.attempts;
+      if (acc >= 0.85) continue; // 잘하는 단원 제외
+      if (!worst || acc < worst.acc) worst = { unit, grade, acc, p };
+    }
+  }
+  return worst;
 }
 
 // ---------- 랭크 ----------
@@ -2724,10 +2838,52 @@ function screenHome() {
     el('div', { class: 'daily-arrow' }, dailyDone ? '' : '▶')
   );
 
+  // 약점 단원 추천 + 복습 큐 카드 (둘 중 적용 가능한 것만 표시)
+  const weak = getWeakUnit();
+  const reviewCount = (SAVE.reviewQueue || []).length;
+  let recommendCard = null;
+  if (weak) {
+    const accPct = Math.round(weak.acc * 100);
+    recommendCard = el('div', {
+      class: 'recommend-card weak',
+      onclick: () => startStage(weak.grade, weak.unit.id),
+    },
+      el('div', { class: 'rec-icon', html: icon('target', { size: 22 }) }),
+      el('div', { class: 'rec-text' },
+        el('div', { class: 'rec-label' }, '다시 도전해 볼까요?'),
+        el('div', { class: 'rec-desc' }, `${weak.unit.name} · 정답률 ${accPct}%${reviewCount ? ` · 복습 ${reviewCount}` : ''}`),
+      ),
+      el('div', { class: 'rec-arrow' }, '▶')
+    );
+  } else if (reviewCount > 0) {
+    // 약점 단원은 없지만 복습 큐가 있으면, 복습 큐 안내
+    const firstReview = SAVE.reviewQueue[0];
+    const reviewUnitId = firstReview.unitId;
+    let reviewUnit = null, reviewGrade = null;
+    for (const [g, info] of Object.entries(GRADES)) {
+      const u = info.units.find(x => x.id === reviewUnitId);
+      if (u) { reviewUnit = u; reviewGrade = +g; break; }
+    }
+    if (reviewUnit) {
+      recommendCard = el('div', {
+        class: 'recommend-card review',
+        onclick: () => startStage(reviewGrade, reviewUnitId),
+      },
+        el('div', { class: 'rec-icon', html: icon('repeat', { size: 22 }) }),
+        el('div', { class: 'rec-text' },
+          el('div', { class: 'rec-label' }, '복습할 문제가 있어요'),
+          el('div', { class: 'rec-desc' }, `${reviewUnit.name} · 복습 ${reviewCount}개 대기`),
+        ),
+        el('div', { class: 'rec-arrow' }, '▶')
+      );
+    }
+  }
+
   const home = el('div', { class: 'home' },
     rankPanel,
     actions,
     dailyCard,
+    recommendCard,
     el('div', { class: 'home-title' }, '학년 선택'),
     el('div', { class: 'home-sub' }, '문제는 매번 새로 생성됩니다. 스테이지가 올라갈수록 난이도가 상승합니다.')
   );
@@ -2912,7 +3068,11 @@ function startStage(grade, unitId, opts = {}) {
   const isBoss = !opts.isDaily && stage % 5 === 0;
   const numProblems = isBoss ? 7 : 5;
   // 보스 스테이지는 더 어려운 단계의 문제 사용
-  const generateStage = isBoss ? Math.max(stage, stage + 2) : stage;
+  let generateStage = isBoss ? Math.max(stage, stage + 2) : stage;
+  // 적응형 완화: 같은 단원에서 3회 이상 연속 실패 시 한 번 stage 낮춤
+  const unitProg = getUnitProgress(unit.id);
+  const adaptiveEase = !opts.isDaily && (unitProg.consecutiveFails || 0) >= 3;
+  if (adaptiveEase) generateStage = Math.max(1, generateStage - 1);
 
   // 시간제한: 일반 stage 7+ → 30초, 13+ → 20초, 보스 → 25초
   let timeLimit = null;
@@ -2929,15 +3089,29 @@ function startStage(grade, unitId, opts = {}) {
   const seen = new Set();
   let guard = 0;
   const targetCount = opts.isDaily ? 7 : numProblems;
+  // 1) 복습 큐에서 우선 — 일반 단원은 최대 2개, 보스는 1개, 데일리는 미사용
+  const reviewSlots = opts.isDaily ? 0 : (isBoss ? 1 : 2);
+  if (reviewSlots > 0) {
+    const reviews = takeReviewProblems(unit.id, reviewSlots);
+    for (const r of reviews) {
+      const key = r.q + '|' + String(r.a) + '|' + (r.visual ? JSON.stringify(r.visual) : '');
+      seen.add(key);
+      problems.push(r);
+    }
+  }
+  // 2) 나머지는 generate로 채움
   while (problems.length < targetCount && guard++ < 300) {
     const p = unit.generate(generateStage);
     if (!p || p.a === undefined || p.a === null) continue;
-    // 같은 질문이라도 visual/정답이 다르면 다른 문제 (도형 이름 인식 단원 등)
     const key = p.q + '|' + String(p.a) + '|' + (p.visual ? JSON.stringify(p.visual) : '');
-    // 80회 이내엔 중복 거부, 이후엔 허용 — 풀이 작은 단원에서 보스 7문제 보장
     if (seen.has(key) && guard < 80) continue;
     seen.add(key);
     problems.push(p);
+  }
+  // 3) 셔플 — 복습 문제가 항상 처음에 오는 패턴 회피
+  for (let i = problems.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [problems[i], problems[j]] = [problems[j], problems[i]];
   }
 
   const state = {
@@ -4214,6 +4388,15 @@ function submitAnswer(state, isTimeout = false) {
     });
   }
 
+  // 단원별 정답률 누적 (데일리 챌린지 제외)
+  if (!state.isDaily && state.unit) {
+    const up = getUnitProgress(state.unit.id);
+    setUnitProgress(state.unit.id, {
+      attempts: (up.attempts || 0) + 1,
+      correct: (up.correct || 0) + (isCorrect ? 1 : 0),
+    });
+  }
+
   if (isCorrect) {
     box.classList.add('correct');
     // 스피드 보너스
@@ -4221,7 +4404,8 @@ function submitAnswer(state, isTimeout = false) {
     let speedLabel = '';
     if (elapsedSec < 3) { speedMul = 1.5; speedLabel = '  ⚡ 1.5x'; SAVE.stats.fastAnswers++; }
     else if (elapsedSec < 6) { speedMul = 1.2; speedLabel = '  🏃 1.2x'; }
-    feedback.textContent = '🎉 정답!' + speedLabel;
+    // 콤보·시점에 따른 격려 메시지 다양화
+    feedback.textContent = pickEncouragement(state.combo + 1, elapsedSec) + speedLabel;
     feedback.className = 'feedback correct show';
     area.classList.add('pop');
     // 정답 스파클 효과
@@ -4231,6 +4415,8 @@ function submitAnswer(state, isTimeout = false) {
     // 통계
     SAVE.stats.correctCount++;
     if (state.combo > SAVE.stats.maxCombo) SAVE.stats.maxCombo = state.combo;
+    // 복습 큐: 정답 시 attempts++ (3회 통과 시 자동 제거)
+    if (problem.__review && state.unit) markReviewSolved(state.unit.id, problem);
     saveSave(SAVE);
     // 사운드
     if (state.combo >= 5 && state.combo % 5 === 0) playCombo(Math.min(5, Math.ceil(state.combo / 5)));
@@ -4251,6 +4437,8 @@ function submitAnswer(state, isTimeout = false) {
     state.combo = 0;
     state.hearts--;
     playWrong();
+    // 오답 → 복습 큐에 추가 (데일리 챌린지 제외)
+    if (!state.isDaily && state.unit) addToReviewQueue(state.unit.id, problem);
     // 풀이/공식 카드 표시
     showExplanationCard(area, problem);
   }
@@ -4309,11 +4497,11 @@ function screenResult(state, completed) {
       SAVE.dailyChallenge.date = todayStr();
       SAVE.stats.dailyCompletions = (SAVE.stats.dailyCompletions || 0) + 1;
     } else {
-      // 일반/보스: 단원 진행도 갱신
+      // 일반/보스: 단원 진행도 갱신 + 연속 실패 카운터 리셋
       const prev = getUnitProgress(state.unit.id);
       const newStars = Math.max(prev.stars, stars);
       const newStage = Math.max(prev.stage, state.stage + 1);
-      setUnitProgress(state.unit.id, { stage: newStage, stars: newStars });
+      setUnitProgress(state.unit.id, { stage: newStage, stars: newStars, consecutiveFails: 0 });
     }
     // 보스 카운터
     if (state.isBoss) {
@@ -4325,6 +4513,10 @@ function screenResult(state, completed) {
     recomputeTotalStars();
     saveSave(SAVE);
     checkBadges();
+  } else if (!state.isDaily && state.unit) {
+    // 단원 실패 → 연속 실패 카운터 +1 (다음 시도에서 적응형 완화 트리거)
+    const prev = getUnitProgress(state.unit.id);
+    setUnitProgress(state.unit.id, { consecutiveFails: (prev.consecutiveFails || 0) + 1 });
   }
   const newRank = getCurrentRank();
   const rankedUp = passed && newRank.id > prevRank.id;
