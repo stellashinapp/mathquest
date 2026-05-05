@@ -1391,7 +1391,7 @@ const GRADES = {
         }
       },
       {
-        id: "g1-mixed", name: "덧뺄 혼합", icon: "🎲", color: "#e0d6ff",
+        id: "g1-mixed", name: "덧셈·뺄셈 혼합", icon: "🎲", color: "#e0d6ff",
         generate(stage) {
           const max = Math.min(10, 5 + stage);
           const a = rand(3, max);
@@ -1648,7 +1648,7 @@ const GRADES = {
     desc: "나눗셈, 분수·소수 기초, 사고력 문장제",
     units: [
       {
-        id: "g3-add3", name: "세 자리 덧뺄", icon: "➕", color: "#cdefe0",
+        id: "g3-add3", name: "세 자리 덧셈·뺄셈", icon: "➕", color: "#cdefe0",
         generate(stage) {
           const cap = Math.min(999, 200 + stage * 100);
           const a = rand(100, cap);
@@ -1857,7 +1857,7 @@ const GRADES = {
         }
       },
       {
-        id: "g4-frac-sd", name: "분수 덧뺄 (동분모)", icon: "🥧", color: "#ffd6e7",
+        id: "g4-frac-sd", name: "분수 덧셈·뺄셈 (동분모)", icon: "🥧", color: "#ffd6e7",
         generate(stage) {
           const d = rand(4, Math.min(12, 5 + stage));
           const a = rand(1, d - 2);
@@ -1869,7 +1869,7 @@ const GRADES = {
         }
       },
       {
-        id: "g4-dec-as", name: "소수 덧뺄", icon: "🎯", color: "#d0f0d0",
+        id: "g4-dec-as", name: "소수 덧셈·뺄셈", icon: "🎯", color: "#d0f0d0",
         generate(stage) {
           const mk = () => roundDec(rand(10, 30 + stage * 10) / 10, 1);
           const a = mk(), b = mk();
@@ -1993,7 +1993,7 @@ const GRADES = {
         }
       },
       {
-        id: "g5-frac-diff", name: "분수 덧뺄 (이분모)", icon: "🥧", color: "#ffdceb",
+        id: "g5-frac-diff", name: "분수 덧셈·뺄셈 (이분모)", icon: "🥧", color: "#ffdceb",
         generate(stage) {
           // a/d1 ± b/d2 with small numbers, reducible answer
           const d1 = rand(2, 6), d2 = rand(2, 6);
