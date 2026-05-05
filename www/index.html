@@ -1425,7 +1425,7 @@ const GRADES = {
           v = ops[0] === '+' ? v + b : v - b;
           if (v < 0) return this.generate(stage);
           v = ops[1] === '+' ? v + c : v - c;
-          if (v < 0) return this.generate(stage);
+          if (v <= 0) return this.generate(stage); // 0/음수 답 회피
           return { q: `${a} ${ops[0]} ${b} ${ops[1]} ${c} = ?`, a: v };
         }
       },
