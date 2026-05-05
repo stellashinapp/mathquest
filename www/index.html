@@ -1398,7 +1398,7 @@ const GRADES = {
           const forms = [
             () => {
               const tens = rand(1, Math.floor(cap / 10));
-              const ones = rand(0, 9);
+              const ones = rand(1, 9); // 0개 표현 회피 (1학년 학습자 혼란 방지)
               return { q: `10이 ${tens}개, 1이 ${ones}개인 수는?`, a: tens * 10 + ones };
             },
             () => {
@@ -1584,7 +1584,7 @@ const GRADES = {
             },
             () => {
               const cm = rand(101, 500);
-              return { q: `${cm}cm = ? m ? cm 중 m 값은?`, a: Math.floor(cm / 100) };
+              return { q: `${cm}cm는 몇 m 몇 cm일까요? (m만)`, a: Math.floor(cm / 100) };
             },
           ];
           return pick(forms)();
@@ -1733,7 +1733,7 @@ const GRADES = {
             },
             () => {
               const w = rand(1, 5), d = rand(1, 9);
-              return { q: `${w}와 0.1이 ${d}개인 수는?`, a: roundDec(w + d * 0.1, 1) };
+              return { q: `${w}에 0.1을 ${d}개 더한 수는?`, a: roundDec(w + d * 0.1, 1) };
             },
             () => {
               const a = roundDec(rand(1, 9) * 0.1, 1);
@@ -1889,6 +1889,8 @@ const GRADES = {
           const op = pick(['+','-']);
           const num = op === '+' ? a + b : a - b;
           if (num <= 0) return this.generate(stage);
+          // 출제 분수 a/d, b/d는 기약분수여야 학습자 혼란 방지
+          if (gcd(a, d) !== 1 || gcd(b, d) !== 1) return this.generate(stage);
           return { q: `${a}/${d} ${op} ${b}/${d} = ? (a/b로 입력, 기약분수)`, a: fracStr(num, d) };
         }
       },
@@ -1999,12 +2001,12 @@ const GRADES = {
               const a = g * rand(2, 5);
               const b = g * rand(2, 5);
               const ag = gcd(a, b);
-              return { q: `${a}와 ${b}의 최대공약수는?`, a: ag };
+              return { q: `${a}, ${b}의 최대공약수는?`, a: ag };
             },
             () => {
               const a = rand(2, 8), b = rand(2, 8);
               const lcm = a * b / gcd(a, b);
-              return { q: `${a}와 ${b}의 최소공배수는?`, a: lcm };
+              return { q: `${a}, ${b}의 최소공배수는?`, a: lcm };
             },
             () => {
               const n = pick([12, 18, 20, 24, 30, 36]);
@@ -2023,6 +2025,8 @@ const GRADES = {
           const d1 = rand(2, 6), d2 = rand(2, 6);
           if (d1 === d2) return this.generate(stage);
           const a = rand(1, d1 - 1), b = rand(1, d2 - 1);
+          // 출제 분수는 기약분수
+          if (gcd(a, d1) !== 1 || gcd(b, d2) !== 1) return this.generate(stage);
           const common = d1 * d2;
           const op = pick(['+','-']);
           const num = op === '+' ? a * d2 + b * d1 : a * d2 - b * d1;
@@ -2037,16 +2041,19 @@ const GRADES = {
           if (stage <= 3) {
             const d1 = rand(2, 4), d2 = rand(2, 4);
             const n1 = rand(1, d1 - 1), n2 = rand(1, d2 - 1);
+            if (gcd(n1, d1) !== 1 || gcd(n2, d2) !== 1) return this.generate(stage);
             return { q: `${n1}/${d1} × ${n2}/${d2} = ? (기약)`, a: fracStr(n1 * n2, d1 * d2) };
           }
           if (stage <= 6) {
             const d1 = rand(2, 6), d2 = rand(2, 6);
             const n1 = rand(1, d1 - 1), n2 = rand(1, d2 - 1);
+            if (gcd(n1, d1) !== 1 || gcd(n2, d2) !== 1) return this.generate(stage);
             return { q: `${n1}/${d1} × ${n2}/${d2} = ? (기약)`, a: fracStr(n1 * n2, d1 * d2) };
           }
           if (stage <= 9) {
             // 분수 × 자연수
             const d = rand(2, 7), n = rand(1, d - 1);
+            if (gcd(n, d) !== 1) return this.generate(stage);
             const k = rand(2, 6);
             return { q: `${n}/${d} × ${k} = ? (기약)`, a: fracStr(n * k, d) };
           }
@@ -2165,7 +2172,8 @@ const GRADES = {
           const d1 = rand(2, Math.min(7, 3 + stage));
           const d2 = rand(2, Math.min(7, 3 + stage));
           const n1 = rand(1, d1 - 1), n2 = rand(1, d2 - 1);
-          // (n1/d1) ÷ (n2/d2) = n1*d2 / (d1*n2)
+          // 출제 분수는 기약분수로 — 학습자가 약분 안 된 분수 보고 헷갈리지 않게
+          if (gcd(n1, d1) !== 1 || gcd(n2, d2) !== 1) return this.generate(stage);
           return { q: `${n1}/${d1} ÷ ${n2}/${d2} = ? (기약분수)`, a: fracStr(n1 * d2, d1 * n2) };
         }
       },
