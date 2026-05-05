@@ -153,12 +153,34 @@
     right: -40px; top: -40px;
     width: 160px; height: 160px; border-radius: 50%;
     background: rgba(255, 255, 255, 0.12);
+    animation: rankFloat1 7s ease-in-out infinite;
   }
   .rank-panel::after {
     content: ''; position: absolute;
     right: -10px; bottom: -50px;
     width: 100px; height: 100px; border-radius: 50%;
     background: rgba(255, 255, 255, 0.08);
+    animation: rankFloat2 6s ease-in-out infinite;
+  }
+  /* 좌측 하단 작은 원 — 별도 요소로 추가, 다른 위상의 부유 */
+  .rank-panel .rank-bubble {
+    position: absolute; left: -30px; bottom: -30px;
+    width: 90px; height: 90px; border-radius: 50%;
+    background: rgba(255, 255, 255, 0.07);
+    pointer-events: none;
+    animation: rankFloat3 8s ease-in-out infinite;
+  }
+  @keyframes rankFloat1 {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    50%      { transform: translate(-6px, 8px) scale(1.04); }
+  }
+  @keyframes rankFloat2 {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    50%      { transform: translate(8px, -6px) scale(1.06); }
+  }
+  @keyframes rankFloat3 {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    50%      { transform: translate(10px, -10px) scale(1.08); }
   }
   .rank-row { display: flex; align-items: center; gap: 14px; position: relative; }
   .rank-icon-big {
@@ -1448,29 +1470,30 @@ const GRADES = {
             { name: "오각형", sides: 5, visual: { type: 'polygon', n: 5 } },
             { name: "육각형", sides: 6, visual: { type: 'polygon', n: 6 } },
           ];
-          if (stage <= 3) {
-            // 기본 3종 인식
-            const basics = items.slice(0, 3);
-            const s = pick(basics);
-            const distractors = basics.filter(x => x.name !== s.name).map(x => x.name).concat(['오각형']);
-            return { q: '이 도형의 이름은?', a: s.name, choices: mcqChoices(s.name, distractors), visual: s.visual };
-          }
-          if (stage <= 6) {
-            // 5종 인식
-            const s = pick(items);
+          const polys = items.filter(x => x.sides > 0);
+          const askName = () => {
+            const pool = stage <= 3 ? items.slice(0, 3) : items;
+            const s = pick(pool);
             const distractors = items.filter(x => x.name !== s.name).map(x => x.name);
             return { q: '이 도형의 이름은?', a: s.name, choices: mcqChoices(s.name, distractors), visual: s.visual };
-          }
-          if (stage <= 9) {
-            // 변 세기 (원 제외)
-            const polys = items.filter(x => x.sides > 0);
+          };
+          const askSides = () => {
             const s = pick(polys);
             return { q: '이 도형의 변은 몇 개?', a: s.sides, visual: { ...s.visual, highlight: 'sides' } };
+          };
+          const askVertices = () => {
+            const s = pick(polys);
+            return { q: '이 도형의 꼭짓점은 몇 개?', a: s.sides, visual: { ...s.visual, highlight: 'vertices' } };
+          };
+
+          if (stage <= 3) return askName();
+          if (stage <= 6) return askName();
+          if (stage <= 9) {
+            // 보스 등 다양성 필요 시 이름 인식도 섞기
+            return pick([askSides, askName])();
           }
-          // stage 10+: 꼭짓점 세기
-          const polys = items.filter(x => x.sides > 0);
-          const s = pick(polys);
-          return { q: '이 도형의 꼭짓점은 몇 개?', a: s.sides, visual: { ...s.visual, highlight: 'vertices' } };
+          // stage 10+: 꼭짓점 + 변 + 이름 모두 섞어 출제
+          return pick([askVertices, askSides, askName])();
         }
       },
     ]
@@ -1480,7 +1503,7 @@ const GRADES = {
     name: "2학년",
     emoji: "2",
     color: "#10b981",
-    desc: "세 자리 수, 곱셈구구, 시각과 시간",
+    desc: "세 자리 수, 구구단, 시각과 시간",
     units: [
       {
         id: "g2-add2", name: "두 자리 덧셈", icon: "➕", color: "#ffeac6",
@@ -1523,7 +1546,7 @@ const GRADES = {
         }
       },
       {
-        id: "g2-mul", name: "곱셈구구", icon: "✖️", color: "#ffe0f5",
+        id: "g2-mul", name: "구구단", icon: "✖️", color: "#ffe0f5",
         generate(stage) {
           // Phase 1~3: 2,5단 / 4~6: 3,4,6단 / 7~9: 7,8,9단 / 10~12: 빈칸 / 13+: 거꾸로 (몫 찾기)
           if (stage <= 3) {
@@ -2647,6 +2670,7 @@ function screenHome() {
   const next = getNextRank();
   const rankPct = next ? Math.min(100, ((SAVE.coins - rank.min) / (next.min - rank.min)) * 100) : 100;
   const rankPanel = el('div', { class: 'rank-panel', style: `--rank-color: ${rank.color};` },
+    el('div', { class: 'rank-bubble' }),
     el('div', { class: 'rank-row' },
       el('div', { class: 'rank-icon-big' }, rank.icon),
       el('div', { class: 'rank-text' },
@@ -2902,7 +2926,8 @@ function startStage(grade, unitId, opts = {}) {
     if (!p || p.a === undefined || p.a === null) continue;
     // 같은 질문이라도 visual/정답이 다르면 다른 문제 (도형 이름 인식 단원 등)
     const key = p.q + '|' + String(p.a) + '|' + (p.visual ? JSON.stringify(p.visual) : '');
-    if (seen.has(key)) continue;
+    // 80회 이내엔 중복 거부, 이후엔 허용 — 풀이 작은 단원에서 보스 7문제 보장
+    if (seen.has(key) && guard < 80) continue;
     seen.add(key);
     problems.push(p);
   }
