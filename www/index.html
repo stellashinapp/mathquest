@@ -1211,8 +1211,9 @@ function checkAnswer(userStr, expected) {
   const e = parseAnswer(String(expected));
   // 둘 다 숫자/분수로 파싱되면 수치 비교
   if (u && e) return Math.abs(u.value - e.value) < 1e-6;
-  // 텍스트 답(객관식 한글 보기 등): 정확 일치
-  return String(userStr).trim() === String(expected).trim();
+  // 텍스트 답(객관식 한글 보기 등): NFC 정규화 후 정확 일치
+  const norm = s => String(s).trim().normalize('NFC');
+  return norm(userStr) === norm(expected);
 }
 
 // 답의 형식 판별 — 키패드/입력 UI 결정에 사용
@@ -2899,8 +2900,10 @@ function startStage(grade, unitId, opts = {}) {
   while (problems.length < targetCount && guard++ < 300) {
     const p = unit.generate(generateStage);
     if (!p || p.a === undefined || p.a === null) continue;
-    if (seen.has(p.q)) continue;
-    seen.add(p.q);
+    // 같은 질문이라도 visual/정답이 다르면 다른 문제 (도형 이름 인식 단원 등)
+    const key = p.q + '|' + String(p.a) + '|' + (p.visual ? JSON.stringify(p.visual) : '');
+    if (seen.has(key)) continue;
+    seen.add(key);
     problems.push(p);
   }
 
