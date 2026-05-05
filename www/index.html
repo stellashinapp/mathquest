@@ -119,11 +119,15 @@
     letter-spacing: -0.2px;
   }
   .mute-btn {
-    position: absolute; top: 19px; right: 90px;
+    position: absolute; top: 19px;
     background: transparent; border: 0;
     color: var(--text-muted); font-size: 16px;
     cursor: pointer; z-index: 6;
   }
+  /* 두 토글 (천천히 모드 / 음소거)이 코인 표시 옆에 배치 */
+  .mute-btn:nth-of-type(1) { right: 120px; }
+  .mute-btn:nth-of-type(2) { right: 90px; }
+  .mute-btn.active { color: var(--primary); }
 
   /* === Home === */
   .home { padding: 4px 20px 24px; overflow-y: auto; flex: 1; }
@@ -2516,6 +2520,7 @@ function daysBetween(a, b) {
 function loadSave() {
   const defaults = {
     coins: 0, units: {}, badges: [], muted: false,
+    relaxedMode: false, // 천천히 모드 — 시간 제한 비활성, 시간 보너스만 적용
     lastPlayDate: '', streak: 0,
     dailyChallenge: { date: '', completed: false }, // 오늘 데일리 챌린지 완료 여부
     reviewQueue: [], // 오답 복습 큐: { unitId, q, a, choices, visual, attempts, addedAt }
@@ -2779,6 +2784,12 @@ function screenHome() {
       el('div', { class: 'hello-sub' }, '오늘도 한 단계!')
     ),
     el('button', {
+      class: 'mute-btn' + (SAVE.relaxedMode ? ' active' : ''),
+      title: SAVE.relaxedMode ? '천천히 모드 끄기' : '천천히 모드 (시간제한 없음)',
+      html: icon('timer', { size: 18 }),
+      onclick: (e) => { e.stopPropagation(); SAVE.relaxedMode = !SAVE.relaxedMode; saveSave(SAVE); render(screenHome()); }
+    }),
+    el('button', {
       class: 'mute-btn',
       title: SAVE.muted ? '소리 켜기' : '소리 끄기',
       html: icon(SAVE.muted ? 'volume-off' : 'volume-on', { size: 18 }),
@@ -2949,20 +2960,29 @@ function screenStats() {
     el('button', { class: 'back', onclick: () => render(screenHome()), html: icon('chevron-left', { size: 18 }) }),
     el('div', {},
       el('div', { class: 'title' }, '학습 기록'),
-      el('div', { class: 'sub' }, '누적 통계')
+      el('div', { class: 'sub' }, '누적 통계 · 단원별 정답률')
     ),
     el('div', { class: 'coins', html: String(SAVE.coins) + '<span class="coin-suffix">P</span>' })
   );
+
+  // 단원별 누적 attempts 기반 전체 정답률
+  let totalAttempts = 0, totalCorrect = 0;
+  for (const u of Object.values(SAVE.units)) {
+    totalAttempts += u.attempts || 0;
+    totalCorrect += u.correct || 0;
+  }
+  const overallAcc = totalAttempts > 0 ? Math.round(totalCorrect / totalAttempts * 100) : null;
   const maxStage = Math.max(1, ...Object.values(SAVE.units).map(u => u.stage || 1));
+
   const stats = [
     { label: '누적 정답', value: SAVE.stats.correctCount, icon: '✅' },
+    { label: '전체 정답률', value: overallAcc != null ? `${overallAcc}%` : '—', icon: '🎯' },
     { label: '최고 콤보', value: SAVE.stats.maxCombo, icon: '🔥' },
     { label: '총 별', value: `${SAVE.stats.totalStars} ⭐`, icon: '⭐' },
     { label: '퍼펙트 스테이지', value: SAVE.stats.perfectStages, icon: '💯' },
     { label: '최고 스테이지', value: maxStage, icon: '🎮' },
-    { label: '보물상자 발견', value: SAVE.stats.chestsOpened, icon: '💰' },
     { label: '연속 출석', value: `${SAVE.streak}일`, icon: '🔥' },
-    { label: '현재 랭크', value: getCurrentRank().name, icon: getCurrentRank().icon },
+    { label: '복습 대기', value: `${(SAVE.reviewQueue || []).length}개`, icon: '🔁' },
   ];
   const body = el('div', { class: 'units' });
   for (const s of stats) {
@@ -2977,6 +2997,41 @@ function screenStats() {
       )
     ));
   }
+
+  // 단원별 정답률 섹션 (5회 이상 시도한 단원만)
+  const unitAccs = [];
+  for (const [grade, info] of Object.entries(GRADES)) {
+    for (const unit of info.units) {
+      const p = getUnitProgress(unit.id);
+      if (!p.attempts || p.attempts < 5) continue;
+      unitAccs.push({ grade: +grade, unit, p, acc: p.correct / p.attempts });
+    }
+  }
+  unitAccs.sort((a, b) => a.acc - b.acc); // 약점부터
+
+  if (unitAccs.length > 0) {
+    body.appendChild(el('div', { class: 'home-title', style: 'margin-top:24px; padding:0 4px;' }, '단원별 정답률'));
+    body.appendChild(el('div', { class: 'home-sub', style: 'padding:0 4px; margin-bottom:10px;' }, '낮은 순으로 정렬 — 약점 단원이 위로 올라옵니다'));
+    for (const item of unitAccs) {
+      const accPct = Math.round(item.acc * 100);
+      const accColor = accPct < 60 ? 'var(--danger)' : accPct < 80 ? 'var(--accent)' : 'var(--success)';
+      body.appendChild(el('div', {
+        class: 'unit-card',
+        style: `--unit-accent: ${accColor}; --unit-icon-bg: #f4f4f7; cursor: pointer;`,
+        onclick: () => startStage(item.grade, item.unit.id),
+      },
+        el('div', { class: 'unit-icon', html: icon(UNIT_ICONS[item.unit.id] || 'hash', { size: 22 }) }),
+        el('div', { class: 'unit-body' },
+          el('div', { class: 'unit-name' }, `${item.grade}학년 · ${item.unit.name}`),
+          el('div', { class: 'unit-meta' },
+            el('span', { style: `color:${accColor}; font-weight:800; font-size:14px;` }, `${accPct}%`),
+            el('span', {}, `${item.p.correct} / ${item.p.attempts}`),
+          )
+        )
+      ));
+    }
+  }
+
   screen.append(topbar, body);
   return screen;
 }
@@ -3083,6 +3138,11 @@ function startStage(grade, unitId, opts = {}) {
   // 데일리 챌린지: 7문제, 시간제한 25초, 어려운 stage로 출제
   if (opts.isDaily) {
     timeLimit = 25;
+  }
+
+  // 천천히 모드: 보스/데일리를 제외한 일반 스테이지의 시간 제한 비활성화
+  if (SAVE.relaxedMode && !isBoss && !opts.isDaily) {
+    timeLimit = null;
   }
 
   const problems = [];
