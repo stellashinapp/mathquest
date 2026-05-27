@@ -4715,16 +4715,25 @@ function showRankUpModal(rank) {
 }
 
 // ============================================================
-// AdMob 광고 연동
+// AdMob 광고 연동 (어린이 앱 정책 준수)
 // - ADS_ENABLED = true 로 바꾸면 광고 다시 켜짐
 // - 웹 브라우저에서는 어차피 동작 안 함 (조기 return)
 // - 배포 전에 AD_INTERSTITIAL_ID를 실제 AdMob ID로, AD_TESTING을 false로
+// - 어린이 대상이므로 COPPA/GDPR-K 태그 + 비개인화(npa) 광고 + 전체이용가 등급만
 // ============================================================
 const ADS_ENABLED = false; // ★ 광고 마스터 스위치 (현재 OFF)
 const AD_INTERSTITIAL_ID = 'ca-app-pub-3940256099942544/1033173712';
 const AD_TESTING = true;
 const AD_SHOW_EVERY_N_CLEARS = 1;
 let adStageClearCount = 0;
+
+// 어린이 앱 광고 안전 설정 — 모든 광고 요청에 공통 적용
+const AD_CHILD_SAFE = {
+  npa: true,                          // 비개인화 광고 (행동 기반 추적 금지)
+  tagForChildDirectedTreatment: true, // COPPA: 아동 대상 처리
+  tagForUnderAgeOfConsent: true,      // GDPR-K: 동의 연령 미만
+  maxAdContentRating: 'General',      // 전체 이용가(G) 등급 광고만
+};
 
 function isNativeApp() {
   return !!(window.Capacitor?.isNativePlatform && window.Capacitor.isNativePlatform());
@@ -4738,7 +4747,12 @@ async function initAds() {
   const AdMob = getAdMob();
   if (!AdMob) return;
   try {
-    await AdMob.initialize({ initializeForTesting: AD_TESTING });
+    await AdMob.initialize({
+      initializeForTesting: AD_TESTING,
+      tagForChildDirectedTreatment: AD_CHILD_SAFE.tagForChildDirectedTreatment,
+      tagForUnderAgeOfConsent: AD_CHILD_SAFE.tagForUnderAgeOfConsent,
+      maxAdContentRating: AD_CHILD_SAFE.maxAdContentRating,
+    });
     await prepareInterstitial();
   } catch (e) { console.warn('[Ads] init failed', e); }
 }
@@ -4748,7 +4762,11 @@ async function prepareInterstitial() {
   const AdMob = getAdMob();
   if (!AdMob) return;
   try {
-    await AdMob.prepareInterstitial({ adId: AD_INTERSTITIAL_ID, isTesting: AD_TESTING });
+    await AdMob.prepareInterstitial({
+      adId: AD_INTERSTITIAL_ID,
+      isTesting: AD_TESTING,
+      npa: AD_CHILD_SAFE.npa, // 비개인화 광고 강제
+    });
   } catch (e) { console.warn('[Ads] prepare failed', e); }
 }
 
