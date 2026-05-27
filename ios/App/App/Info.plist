@@ -45,5 +45,14 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<!-- 암호화 수출 규정: HTTPS만 사용 → 면제. App Store 업로드 시 매번 묻는 단계 생략 -->
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+	<!-- AdMob iOS App ID (Google 공식 테스트 ID — 배포 시 실제 iOS App ID로 교체) -->
+	<key>GADApplicationIdentifier</key>
+	<string>ca-app-pub-3940256099942544~1458002511</string>
+	<!-- 광고 추적 권한 설명 (어린이 앱은 비개인화 광고 권장 — 추적 미사용 시에도 SDK 안전망) -->
+	<key>NSUserTrackingUsageDescription</key>
+	<string>광고를 더 알맞게 보여주기 위해 사용돼요. 허용하지 않아도 앱을 그대로 이용할 수 있어요.</string>
 </dict>
 </plist>

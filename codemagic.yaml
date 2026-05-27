@@ -1,0 +1,66 @@
+# Codemagic CI/CD — iOS App Store 빌드/배포
+# Windows에서 git push만 하면 Codemagic의 macOS 머신이 빌드·서명·TestFlight 업로드.
+#
+# 사전 준비 (Codemagic 웹에서 1회):
+#   1. codemagic.io 가입 → GitHub repo(stellashinapp/mathquest) 연결
+#   2. App Store Connect API 키 발급:
+#      App Store Connect → Users and Access → Integrations → App Store Connect API
+#      → 키 생성(App Manager 권한) → .p8 / Key ID / Issuer ID 확보
+#   3. Codemagic → Teams → Integrations → App Store Connect 에 위 키 등록
+#      (등록 이름을 아래 app_store_connect 의 값과 동일하게: "MathQuest ASC")
+#   4. App Store Connect 에서 앱 등록 (번들 ID: com.mathquest.app)
+
+workflows:
+  ios-appstore:
+    name: iOS App Store
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+    environment:
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.mathquest.app
+      vars:
+        XCODE_WORKSPACE: "ios/App/App.xcworkspace"
+        XCODE_SCHEME: "App"
+        APP_STORE_APPLE_ID: 0000000000   # App Store Connect의 앱 Apple ID 숫자로 교체
+      node: 20
+      xcode: latest
+      cocoapods: default
+    integrations:
+      app_store_connect: MathQuest ASC   # Codemagic에 등록한 API 키 이름과 일치시킬 것
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: main
+          include: true
+    scripts:
+      - name: 웹 의존성 설치
+        script: npm ci
+      - name: Capacitor iOS 동기화 (www → ios)
+        script: npx cap sync ios
+      - name: CocoaPods 설치
+        script: |
+          cd ios/App
+          pod install
+      - name: 빌드 번호를 Codemagic 빌드 번호로 설정
+        script: |
+          cd ios/App
+          agvtool new-version -all $(($BUILD_NUMBER))
+      - name: 서명 프로파일 적용
+        script: |
+          xcode-project use-profiles
+      - name: IPA 빌드
+        script: |
+          xcode-project build-ipa \
+            --workspace "$XCODE_WORKSPACE" \
+            --scheme "$XCODE_SCHEME" \
+            --config Release
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true     # TestFlight 베타로 업로드 (심사 전 내부 테스트)
+        # submit_to_app_store: false   # App Store 정식 심사 제출까지 자동화하려면 true
