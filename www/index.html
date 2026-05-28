@@ -234,15 +234,19 @@
   }
 
   /* === Action pills === */
-  .home-actions { display: flex; gap: 10px; margin-bottom: 14px; }
+  .home-actions { display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
   .action-pill {
-    flex: 1;
+    flex: 1; min-width: calc(33% - 8px);
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius);
     padding: 14px 16px; cursor: pointer;
     display: flex; align-items: center; justify-content: space-between;
     transition: transform .12s, border-color .12s, box-shadow .12s;
+  }
+  .action-pill.village-pill {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    border-color: #f59e0b;
   }
   .action-pill:active {
     transform: scale(0.98);
@@ -721,6 +725,131 @@
     min-width: 24px; text-align: center;
   }
   .answer-box.fraction { min-height: 78px; padding: 8px 22px; }
+
+  /* === 수학마을 / 상점 === */
+  .village-scene {
+    margin: 12px 16px 0;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+    background: #c4d8ff;
+  }
+  .village-svg { width: 100%; height: auto; display: block; }
+  .village-empty {
+    padding: 50px 20px;
+    text-align: center;
+    background: linear-gradient(180deg, #c4d8ff 0%, #86d889 100%);
+    color: #1a1d2e;
+  }
+  .village-empty-emoji { font-size: 56px; margin-bottom: 10px; }
+  .village-empty-title { font-size: 17px; font-weight: 800; }
+  .village-empty-sub { font-size: 13px; font-weight: 600; margin-top: 4px; opacity: 0.7; }
+  .village-shop-btn {
+    display: block; width: calc(100% - 32px);
+    margin: 14px 16px 0;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    color: #fff;
+    border: 0; border-radius: 14px;
+    padding: 16px;
+    font-size: 16px; font-weight: 800; letter-spacing: -0.3px;
+    cursor: pointer;
+    box-shadow: var(--shadow-primary);
+    font-family: inherit;
+    transition: transform .12s;
+  }
+  .village-shop-btn:active { transform: scale(0.98); }
+  .village-list { padding: 0 16px 20px; }
+  .village-owned-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
+  }
+  .village-owned-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 10px 6px;
+    text-align: center;
+  }
+  .vo-emoji { font-size: 26px; line-height: 1; }
+  .vo-name { font-size: 11px; font-weight: 700; color: var(--text-muted); margin-top: 4px; letter-spacing: -0.2px; }
+
+  /* 상점 탭 + 그리드 */
+  .shop-tabs {
+    display: flex; gap: 6px;
+    padding: 4px 16px 8px;
+    overflow-x: auto;
+  }
+  .shop-tab {
+    flex-shrink: 0;
+    background: var(--surface-soft);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 8px 14px;
+    font-size: 13px; font-weight: 700;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-family: inherit;
+    transition: all .15s;
+  }
+  .shop-tab.active {
+    background: var(--primary);
+    color: #fff;
+    border-color: var(--primary-deep);
+  }
+  .shop-grid {
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;
+    padding: 8px 16px 24px;
+  }
+  .shop-card {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 16px;
+    padding: 16px 12px 12px;
+    text-align: center;
+    transition: transform .12s, border-color .12s;
+  }
+  .shop-card.owned {
+    background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+    border-color: var(--success);
+  }
+  .shop-card.locked { opacity: 0.6; }
+  .sc-emoji { font-size: 48px; line-height: 1; margin-bottom: 8px; }
+  .sc-name { font-size: 14px; font-weight: 800; letter-spacing: -0.3px; }
+  .sc-price {
+    font-size: 16px; font-weight: 900;
+    color: var(--primary);
+    margin: 6px 0 10px;
+  }
+  .shop-card.owned .sc-price { color: var(--success); font-size: 13px; }
+  .sc-buy {
+    width: 100%;
+    background: var(--primary);
+    color: #fff;
+    border: 0; border-radius: 10px;
+    padding: 10px;
+    font-size: 13px; font-weight: 800;
+    cursor: pointer;
+    font-family: inherit;
+    transition: transform .1s, background .12s;
+  }
+  .sc-buy:active:not(.disabled) { transform: scale(0.96); background: var(--primary-deep); }
+  .sc-buy.disabled {
+    background: var(--surface-soft);
+    color: var(--text-muted);
+    cursor: not-allowed;
+  }
+
+  /* 컨페티 (구매 효과) */
+  .confetti-piece {
+    position: fixed; top: -10px;
+    width: 8px; height: 12px;
+    z-index: 9999;
+    animation: confettiFall 1.4s ease-in forwards;
+    pointer-events: none;
+  }
+  @keyframes confettiFall {
+    0%   { transform: translateY(0) rotate(0); opacity: 1; }
+    100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+  }
 
   /* 객관식(MCQ) 보기 그리드 */
   .mcq-grid {
@@ -2524,6 +2653,7 @@ function loadSave() {
     lastPlayDate: '', streak: 0,
     dailyChallenge: { date: '', completed: false }, // 오늘 데일리 챌린지 완료 여부
     reviewQueue: [], // 오답 복습 큐: { unitId, q, a, choices, visual, attempts, addedAt }
+    village: { owned: [], totalSpent: 0 }, // 수학마을: 소유한 아이템 ID 배열 + 누적 소비 코인
     stats: {
       correctCount: 0, maxCombo: 0, perfectStages: 0, totalStars: 0,
       chestsOpened: 0, gradesPlayed: [],
@@ -2539,6 +2669,7 @@ function loadSave() {
     return { ...defaults, ...s,
       dailyChallenge: { ...defaults.dailyChallenge, ...(s.dailyChallenge || {}) },
       stats: { ...defaults.stats, ...(s.stats || {}) },
+      village: { ...defaults.village, ...(s.village || {}) },
       badges: s.badges || [] };
   } catch { return defaults; }
 }
@@ -2821,8 +2952,9 @@ function screenHome() {
     ),
   );
 
-  // 액션 버튼 (뱃지 / 통계)
+  // 액션 버튼 (뱃지 / 기록 / 마을)
   const unlockedBadges = SAVE.badges.length;
+  const ownedCount = (SAVE.village.owned || []).length;
   const actions = el('div', { class: 'home-actions' },
     el('div', { class: 'action-pill', onclick: () => render(screenBadges()) },
       el('span', { class: 'ap-label', html: icon('trophy', { size: 16 }) + ' 뱃지' }),
@@ -2831,6 +2963,10 @@ function screenHome() {
     el('div', { class: 'action-pill', onclick: () => render(screenStats()) },
       el('span', { class: 'ap-label', html: icon('chart', { size: 16 }) + ' 기록' }),
       el('span', { class: 'ap-val' }, `정답 ${SAVE.stats.correctCount}`)
+    ),
+    el('div', { class: 'action-pill village-pill', onclick: () => render(screenVillage()) },
+      el('span', { class: 'ap-label' }, '🏘 수학마을'),
+      el('span', { class: 'ap-val' }, `${ownedCount} / ${VILLAGE_ITEMS.length}`)
     ),
   );
 
@@ -2951,6 +3087,205 @@ function screenBadges() {
   }
   screen.append(topbar, grid);
   return screen;
+}
+
+// ============================================================
+// 🏘 수학마을 (Math Village) — 코인으로 아이템 구매 + 마을 꾸미기
+// ============================================================
+const VILLAGE_CATS = [
+  { id: 'nature',   name: '자연',  icon: '🌳' },
+  { id: 'building', name: '건물',  icon: '🏫' },
+  { id: 'animal',   name: '동물',  icon: '🐶' },
+  { id: 'deco',     name: '장식',  icon: '🎈' },
+];
+const VILLAGE_ITEMS = [
+  // 자연 (저렴 → 화려)
+  { id: 'tree1',    name: '나무',     emoji: '🌳', cat: 'nature',   price: 50 },
+  { id: 'mushroom', name: '버섯',     emoji: '🍄', cat: 'nature',   price: 60 },
+  { id: 'flower',   name: '꽃밭',     emoji: '🌷', cat: 'nature',   price: 80 },
+  { id: 'tree2',    name: '소나무',   emoji: '🌲', cat: 'nature',   price: 100 },
+  { id: 'pond',     name: '연못',     emoji: '💧', cat: 'nature',   price: 250 },
+  { id: 'rainbow',  name: '무지개',   emoji: '🌈', cat: 'nature',   price: 700 },
+  // 건물
+  { id: 'tent',     name: '텐트',     emoji: '⛺', cat: 'building', price: 150 },
+  { id: 'house',    name: '집',       emoji: '🏠', cat: 'building', price: 250 },
+  { id: 'school',   name: '학교',     emoji: '🏫', cat: 'building', price: 400 },
+  { id: 'shop',     name: '가게',     emoji: '🏪', cat: 'building', price: 500 },
+  { id: 'library',  name: '도서관',   emoji: '🏛', cat: 'building', price: 600 },
+  { id: 'castle',   name: '성',       emoji: '🏰', cat: 'building', price: 2500 },
+  // 동물 친구
+  { id: 'dog',      name: '강아지',   emoji: '🐶', cat: 'animal',   price: 300 },
+  { id: 'cat',      name: '고양이',   emoji: '🐱', cat: 'animal',   price: 300 },
+  { id: 'rabbit',   name: '토끼',     emoji: '🐰', cat: 'animal',   price: 400 },
+  { id: 'panda',    name: '판다',     emoji: '🐼', cat: 'animal',   price: 800 },
+  { id: 'unicorn',  name: '유니콘',   emoji: '🦄', cat: 'animal',   price: 1800 },
+  { id: 'dragon',   name: '용',       emoji: '🐲', cat: 'animal',   price: 3500 },
+  // 장식
+  { id: 'balloon',  name: '풍선',     emoji: '🎈', cat: 'deco',     price: 80 },
+  { id: 'gift',     name: '선물상자', emoji: '🎁', cat: 'deco',     price: 150 },
+  { id: 'star',     name: '별',       emoji: '⭐', cat: 'deco',     price: 200 },
+  { id: 'fountain', name: '분수',     emoji: '⛲', cat: 'deco',     price: 700 },
+  { id: 'carousel', name: '회전목마', emoji: '🎠', cat: 'deco',     price: 1500 },
+  { id: 'rocket',   name: '로켓',     emoji: '🚀', cat: 'deco',     price: 1200 },
+];
+
+function isOwned(itemId) { return SAVE.village && SAVE.village.owned.includes(itemId); }
+function buyVillageItem(item) {
+  if (isOwned(item.id)) return false;
+  if (SAVE.coins < item.price) return false;
+  SAVE.coins -= item.price;
+  SAVE.village.owned.push(item.id);
+  SAVE.village.totalSpent = (SAVE.village.totalSpent || 0) + item.price;
+  saveSave(SAVE);
+  return true;
+}
+
+// 시드 기반 의사난수 (아이템 위치를 안정적으로 배치)
+function seededRand(seed) {
+  let s = seed | 0;
+  return () => { s = (s * 9301 + 49297) % 233280; return s / 233280; };
+}
+
+function renderVillageScene() {
+  const owned = (SAVE.village.owned || []).map(id => VILLAGE_ITEMS.find(it => it.id === id)).filter(Boolean);
+  if (owned.length === 0) {
+    return `<div class="village-empty">
+      <div class="village-empty-emoji">🏞</div>
+      <div class="village-empty-title">아직 비어 있는 마을이에요</div>
+      <div class="village-empty-sub">상점에서 첫 아이템을 사 보세요!</div>
+    </div>`;
+  }
+  // 배경 SVG: 하늘 그라데이션 + 산 + 잔디
+  const W = 360, H = 240;
+  // 안정적 위치 배치 — 아이템 id 해시 기반
+  const placedItems = owned.map(it => {
+    let hash = 0;
+    for (let i = 0; i < it.id.length; i++) hash = (hash * 31 + it.id.charCodeAt(i)) | 0;
+    const rng = seededRand(Math.abs(hash));
+    const x = 30 + rng() * (W - 60);
+    const y = 120 + rng() * (H - 150); // 잔디 영역 안
+    const size = it.cat === 'building' ? 38 : (it.cat === 'animal' ? 30 : 26);
+    return { it, x, y, size };
+  });
+  // y로 정렬 (앞쪽이 위에 그려지도록) — 큰 y가 앞
+  placedItems.sort((a, b) => a.y - b.y);
+  const items = placedItems.map(p =>
+    `<text x="${p.x.toFixed(1)}" y="${p.y.toFixed(1)}" font-size="${p.size}" text-anchor="middle" dominant-baseline="middle">${p.it.emoji}</text>`
+  ).join('');
+  return `
+    <svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" class="village-svg">
+      <defs>
+        <linearGradient id="vSky" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#c4d8ff"/>
+          <stop offset="100%" stop-color="#fde2c8"/>
+        </linearGradient>
+        <linearGradient id="vGrass" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#86d889"/>
+          <stop offset="100%" stop-color="#5cb860"/>
+        </linearGradient>
+      </defs>
+      <rect width="${W}" height="${H}" fill="url(#vSky)"/>
+      <!-- 산 실루엣 -->
+      <polygon points="0,140 80,80 130,110 200,60 280,100 360,90 360,140 0,140" fill="#b8c5e8" opacity="0.8"/>
+      <polygon points="0,150 60,110 140,130 220,90 300,120 360,110 360,150 0,150" fill="#a0b0d8" opacity="0.6"/>
+      <!-- 잔디 -->
+      <rect x="0" y="120" width="${W}" height="${H - 120}" fill="url(#vGrass)"/>
+      <!-- 해 -->
+      <circle cx="${W - 50}" cy="40" r="22" fill="#fff3a0" opacity="0.9"/>
+      ${items}
+    </svg>`;
+}
+
+function screenVillage() {
+  const screen = el('div', { class: 'screen' });
+  const topbar = el('div', { class: 'topbar' },
+    el('button', { class: 'back', onclick: () => render(screenHome()), html: icon('chevron-left', { size: 18 }) }),
+    el('div', {},
+      el('div', { class: 'title' }, '🏘 수학마을'),
+      el('div', { class: 'sub' }, `${(SAVE.village.owned || []).length} / ${VILLAGE_ITEMS.length} 아이템 보유`)
+    ),
+    el('div', { class: 'coins', html: String(SAVE.coins) + '<span class="coin-suffix">P</span>' })
+  );
+  const sceneBox = el('div', { class: 'village-scene', html: renderVillageScene() });
+  const shopBtn = el('button', {
+    class: 'village-shop-btn',
+    onclick: () => render(screenShop()),
+    html: '🛒 상점에서 아이템 구매하기'
+  });
+  const list = el('div', { class: 'village-list' });
+  const owned = (SAVE.village.owned || []).map(id => VILLAGE_ITEMS.find(it => it.id === id)).filter(Boolean);
+  if (owned.length > 0) {
+    list.appendChild(el('div', { class: 'home-title', style: 'margin:24px 0 8px; padding:0 4px;' }, '보유 아이템'));
+    const grid = el('div', { class: 'village-owned-grid' });
+    owned.forEach(it => {
+      grid.appendChild(el('div', { class: 'village-owned-card' },
+        el('div', { class: 'vo-emoji' }, it.emoji),
+        el('div', { class: 'vo-name' }, it.name),
+      ));
+    });
+    list.appendChild(grid);
+  }
+  screen.append(topbar, sceneBox, shopBtn, list);
+  return screen;
+}
+
+function screenShop(activeCat = 'nature') {
+  const screen = el('div', { class: 'screen' });
+  const topbar = el('div', { class: 'topbar' },
+    el('button', { class: 'back', onclick: () => render(screenVillage()), html: icon('chevron-left', { size: 18 }) }),
+    el('div', {},
+      el('div', { class: 'title' }, '🛒 상점'),
+      el('div', { class: 'sub' }, '포인트로 마을 아이템을 사 보세요')
+    ),
+    el('div', { class: 'coins', html: String(SAVE.coins) + '<span class="coin-suffix">P</span>' })
+  );
+
+  const tabs = el('div', { class: 'shop-tabs' });
+  VILLAGE_CATS.forEach(c => {
+    tabs.appendChild(el('button', {
+      class: 'shop-tab' + (c.id === activeCat ? ' active' : ''),
+      onclick: () => render(screenShop(c.id))
+    }, `${c.icon} ${c.name}`));
+  });
+
+  const grid = el('div', { class: 'shop-grid' });
+  VILLAGE_ITEMS.filter(it => it.cat === activeCat).forEach(it => {
+    const owned = isOwned(it.id);
+    const canBuy = !owned && SAVE.coins >= it.price;
+    const cardCls = 'shop-card' + (owned ? ' owned' : (canBuy ? '' : ' locked'));
+    const card = el('div', { class: cardCls },
+      el('div', { class: 'sc-emoji' }, it.emoji),
+      el('div', { class: 'sc-name' }, it.name),
+      el('div', { class: 'sc-price', html: owned ? '✅ 보유 중' : `${it.price}<span class="coin-suffix">P</span>` }),
+      owned ? null : el('button', {
+        class: 'sc-buy' + (canBuy ? '' : ' disabled'),
+        onclick: canBuy ? () => {
+          if (buyVillageItem(it)) {
+            playCorrect();
+            spawnConfetti();
+            render(screenShop(activeCat));
+          }
+        } : null,
+      }, canBuy ? '구매' : '포인트 부족'),
+    );
+    grid.appendChild(card);
+  });
+
+  screen.append(topbar, tabs, grid);
+  return screen;
+}
+
+// 구매 시 짧은 컨페티 (없으면 단순 효과)
+function spawnConfetti() {
+  for (let i = 0; i < 12; i++) {
+    const c = document.createElement('div');
+    c.className = 'confetti-piece';
+    c.style.left = (10 + Math.random() * 80) + '%';
+    c.style.background = ['#6366f1', '#f59e0b', '#10b981', '#ec4899'][i % 4];
+    c.style.animationDelay = (Math.random() * 0.2) + 's';
+    document.body.appendChild(c);
+    setTimeout(() => c.remove(), 1400);
+  }
 }
 
 // ---------- 통계 화면 ----------
