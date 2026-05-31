@@ -4,7 +4,11 @@ android {
     namespace "com.mathquest.app"
     compileSdk rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "com.mathquest.app"
+        // Play Console에 등록된 패키지명 (com.mathquest.app은 다른 개발자가 선점)
+        // namespace는 com.mathquest.app 그대로 두어 소스 디렉터리 변경 불필요
+        // → applicationId만 변경하면 AndroidManifest의 ${applicationId} 기반
+        //   provider authority도 자동으로 com.mathquest.learning.* 으로 갱신됨
+        applicationId "com.mathquest.learning"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
