@@ -30,8 +30,13 @@ android {
     }
     buildTypes {
         release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            // R8 활성화: 코드 축소 + 리소스 축소 + 난독화
+            // → APK/AAB 크기 감소 + Play Console 'mapping.txt' 자동 생성
+            //   (mapping.txt는 build/outputs/mapping/release/ 에 생기고
+            //    bundleRelease 시 AAB 메타데이터에 함께 첨부됨)
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             signingConfig signingConfigs.release
         }
     }
