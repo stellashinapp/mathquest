@@ -59,11 +59,16 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
+  /* 노치/펀치홀/제스처바 등 시스템 영역 안전 여백
+     env(safe-area-inset-*)는 iOS·Android(노치 기기) 모두에서 동작 */
   #app {
     max-width: 480px; margin: 0 auto; height: 100dvh; height: 100vh;
     display: flex; flex-direction: column; position: relative;
     background: var(--bg);
     overflow: hidden;
+    /* 좌우 안전영역은 #app에서 흡수 (가로 노치 대비) */
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
   }
   .screen { flex: 1; display: flex; flex-direction: column; overflow: hidden; animation: fadeIn .25s ease; }
   @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
@@ -71,7 +76,8 @@
   /* === Top bar === */
   .topbar {
     display: flex; align-items: center; justify-content: space-between;
-    padding: 16px 20px;
+    /* 상단 노치/카메라/상태바를 피하기 위해 padding-top에 safe-area 추가 */
+    padding: calc(16px + env(safe-area-inset-top)) 20px 16px;
     background: var(--bg);
     color: var(--text);
     z-index: 5;
@@ -119,7 +125,8 @@
     letter-spacing: -0.2px;
   }
   .mute-btn {
-    position: absolute; top: 19px;
+    position: absolute;
+    top: calc(19px + env(safe-area-inset-top));
     background: transparent; border: 0;
     color: var(--text-muted); font-size: 16px;
     cursor: pointer; z-index: 6;
@@ -130,7 +137,7 @@
   .mute-btn.active { color: var(--primary); }
 
   /* === Home === */
-  .home { padding: 4px 20px 24px; overflow-y: auto; flex: 1; }
+  .home { padding: 4px 20px calc(24px + env(safe-area-inset-bottom)); overflow-y: auto; flex: 1; }
   .home-title {
     font-size: 22px; font-weight: 800;
     color: var(--text); letter-spacing: -0.7px;
@@ -434,7 +441,7 @@
   }
 
   /* === Unit list === */
-  .units { padding: 6px 20px 24px; overflow-y: auto; flex: 1; }
+  .units { padding: 6px 20px calc(24px + env(safe-area-inset-bottom)); overflow-y: auto; flex: 1; }
   .unit-card {
     background: var(--surface);
     border: 1px solid var(--border);
@@ -502,7 +509,7 @@
   .unit-stars { color: var(--accent); letter-spacing: 1px; font-size: 13px; }
 
   /* === Play screen === */
-  .play { flex: 1; display: flex; flex-direction: column; padding: 14px 20px 18px; overflow: hidden; }
+  .play { flex: 1; display: flex; flex-direction: column; padding: 14px 20px calc(18px + env(safe-area-inset-bottom)); overflow: hidden; }
   .hud { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
   .hearts { font-size: 22px; letter-spacing: 3px; }
   .hearts .lost { opacity: 0.2; filter: grayscale(1); }
